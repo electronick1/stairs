@@ -1,6 +1,7 @@
 
 
-Stairs. Framework for data processing.
+## Stairs. 
+High-level Framework for data processing.
 
 
 Stairs - It's a simple tool which allows you to juggle with data. 
