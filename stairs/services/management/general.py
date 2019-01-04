@@ -1,12 +1,6 @@
 import click
 from stairs.core import app
 
-
-from stairs.services.admin import server as admin_server
-
-from .cli import shell
-
-
 @click.group()
 def general_cli():
     pass
@@ -24,7 +18,7 @@ def init_session():
     shell.get_shell()("Let's go")
 
 
-@general_cli.command("admin")
-def init_admin():
-
-    admin_server.run_admin_server()
+# @general_cli.command("admin")
+# def init_admin():
+#
+#     admin_server.run_admin_server()

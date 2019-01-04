@@ -9,7 +9,7 @@ def project_cli():
     pass
 
 
-@project_cli.command('project:create')
+@project_cli.command('project:new')
 @click.argument('name')
 def make(name):
     """

@@ -1,2 +1,1 @@
-recursive-include stairs/services/admin *
 recursive-include stairs/core/producer/adapter/iter_worker_adapter/utils *
