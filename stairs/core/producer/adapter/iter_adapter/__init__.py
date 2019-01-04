@@ -15,7 +15,7 @@ class IterAdapter(BaseProducerAdapter):
 
     def __init__(self, app, handler, app_inputs):
         self.app = app
-        self.app_inputs = app_inputs
+        self.app_inputs = app_inputs or []
         self.handler = handler
 
     def init_session(self):

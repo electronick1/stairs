@@ -41,7 +41,9 @@ class Worker(components.AppWorker):
                                "run worker.compile()")
 
         result = call_next_step(kwargs, self.pipeline.get_stepist_root())
-        return list(result.values())[0]
+
+        if result:
+            return list(result.values())[0]
 
     def compile(self):
         self.pipeline.compile()

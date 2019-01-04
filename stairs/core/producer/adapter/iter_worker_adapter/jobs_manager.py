@@ -5,6 +5,9 @@ import time
 from stepist.flow.steps.step import StepData
 
 
+BITMAP_EXPIRE_TIME = 60  # 1 minute
+
+
 class JobsManager(object):
 
     def __init__(self, adapter, max_chunks_online, max_jobs_per_input=1000000):
@@ -35,8 +38,12 @@ class JobsManager(object):
             # getting random chunks
             chunk_index = random.randint(0, amount_of_chunks - 1)
 
+            pipe = redis_db.pipeline()
             # check if we already processed this chunk
-            bit = redis_db.getbit(self.worker_checker_key(), chunk_index)
+            pipe.getbit(self.worker_checker_key(), chunk_index)
+            pipe.exists(self.worker_checker_key())
+
+            bit, exist = pipe.execute()
 
             if int(bit) == 1:
                 # checking if we already processed all chunks
@@ -45,8 +52,12 @@ class JobsManager(object):
                     # if we processed everything. Let's remove bits map.
                     redis_db.delete(self.worker_checker_key())
                     print("generator done")
-                    break
+                    exit()
                 continue
+
+            if int(exist) == 0:
+                print("looks like generator done")
+                exit()
 
             queue_key = self.get_queue_key()
 
