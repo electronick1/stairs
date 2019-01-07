@@ -1,9 +1,4 @@
-
-
 ![stairs](https://electronick1.github.io/stairs_doc/images/stairs_black.svg)
-
-
-
 
 
 High-level Framework for data processing.
