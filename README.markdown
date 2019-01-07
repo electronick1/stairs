@@ -1,6 +1,6 @@
 
 
-![stairs](https://electronick1.github.io/stairs_doc/images/stairs.png)
+![stairs](https://electronick1.github.io/stairs_doc/images/stairs_black.png)
 
 
 
