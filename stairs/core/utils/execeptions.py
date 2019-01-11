@@ -1,4 +1,4 @@
 
 
-class StopPipeline(Exception):
+class StopPipelineFlag(Exception):
     pass

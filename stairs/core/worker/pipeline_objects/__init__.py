@@ -1,8 +1,12 @@
 import uuid
 import types
 
+import stepist
+
 from stepist.flow.steps.next_step import call_next_step
-from stepist.flow.utils import validate_handler_data
+from stepist.flow.utils import validate_handler_data, StopFlowFlag
+
+from stairs.core.utils.execeptions import StopPipelineFlag
 
 from stairs.core.worker.pipeline_objects import context as pipeline_context
 
@@ -98,7 +102,11 @@ class PipelineFlow(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
         flow_data = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_data)
+
+        try:
+            result = self.component(**flow_data)
+        except StopPipelineFlag:
+            raise StopFlowFlag()
         # if self.update_pipe_data:
         #     result_data = dict(**kwargs, **result)
         # else:
@@ -121,7 +129,11 @@ class PipelineFlowProducer(PipelineComponent):
         component_data = self.validate_input_data(kwargs)
 
         flow_kwargs = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_kwargs)
+
+        try:
+            result = self.component(**flow_kwargs)
+        except StopPipelineFlag:
+            raise StopFlowFlag()
 
         if isinstance(result, types.GeneratorType):
             for row_data in result:
