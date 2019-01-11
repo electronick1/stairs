@@ -9,9 +9,10 @@ from stairs.core.session import project_session
 
 
 MODULES_FOR_IMPORT = [
-    'app_config'
-    'pipeline',
-    'input',
+    'app_config',
+    'pipelines',
+    'producers',
+    'consumers',
 ]
 
 

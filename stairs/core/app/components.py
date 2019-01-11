@@ -4,7 +4,10 @@ from stairs.core.utils import AttrDict
 from stairs.core.session import step_session
 
 MODULES_FOR_IMPORT = [
-    'input'
+    'app_config',
+    'pipelines',
+    'producers',
+    'consumers',
 ]
 
 

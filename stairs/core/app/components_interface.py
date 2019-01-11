@@ -36,7 +36,13 @@ class ComponentsMixin:
 
         return _deco_init
 
-    def output(self):
+    def consumer(self):
+        def _handler_wrap(func):
+            return Output(app=self, handler=func)
+
+        return _handler_wrap
+
+    def standalone_consumer(self):
         def _handler_wrap(func):
             return Output(app=self, handler=func)
 

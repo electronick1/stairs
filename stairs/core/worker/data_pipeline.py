@@ -228,7 +228,7 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_output(self, output, name=None):
+    def subscribe_consumer(self, output, name=None, as_worker=False):
         data_pipeline = copy.copy(self.data_pipeline)
 
         name = name or "%s:%s" % ("output", output.name())
@@ -239,7 +239,7 @@ class DataFrame:
             component=output,
             id=name,
             config=data_pipeline.worker_info.config,
-            as_worker=output.as_daemon,
+            as_worker=as_worker,
             update_pipe_data=False
         )
 
