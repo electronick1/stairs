@@ -9,3 +9,5 @@ for most of your data related tasks.
 
 Checkout full [Documentation](https://electronick1.github.io/stairs_doc) 
 
+Join [Telegram](https://t.me/stairs_project) 
+

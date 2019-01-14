@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stairs-project",
-    version="0.0.0.1",
+    version="0.0.0.2",
     author="Aleh Shydlouski",
     author_email="oleg.ivye@gmail.com",
     description="Framework for data processing using data pipelines",
