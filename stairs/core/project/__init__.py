@@ -8,6 +8,7 @@ from stairs.core.app.components import AppBaseComponent
 from stairs.core.session import project_session
 
 from stairs.core.project import dbs, config as stairs_config
+from stairs.core.project import utils
 
 
 class StairsProject:
@@ -25,6 +26,24 @@ class StairsProject:
 
         self.dbs = dbs.DBs(self.config)
         project_session.set_project(self)
+
+    def run_pipelines(self):
+        self.stepist_app.run(self.pipelines_to_run())
+
+    def pipelines_to_run(self):
+        components_to_run = []
+
+        for step in self.stepist_app.get_workers_steps():
+            related_to_pipeline = False
+
+            for pipeline_step in utils.PIPELINES_STEPS_TO_RUN:
+                if isinstance(step.handler, pipeline_step):
+                    related_to_pipeline = True
+
+            if related_to_pipeline:
+                components_to_run.append(step)
+
+        return components_to_run
 
     def add_app(self, app):
         self.apps.append(app)

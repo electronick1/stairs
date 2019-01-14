@@ -15,7 +15,7 @@ def workers_cli():
     pass
 
 
-@workers_cli.command("workers:run")
+@workers_cli.command("pipelines:run")
 @click.argument('apps', nargs=-1)
 def run(apps):
     """
@@ -23,11 +23,4 @@ def run(apps):
     """
 
     project = project_session.get_project()
-
-    components_to_run = []
-
-    for component in project.stepist_app.get_workers_steps():
-        if not isinstance(component.handler, StandAloneConsumer):
-            components_to_run.append(component)
-
-    project.stepist_app.run(components_to_run)
+    project.run_pipelines()
