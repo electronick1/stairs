@@ -31,7 +31,7 @@ class Output(components.AppOutput):
         return self.__name__()
 
     def key(self):
-        return self.__name__()
+        return self.name()
 
     def name(self):
         return self.handler.__name__

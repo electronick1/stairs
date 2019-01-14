@@ -107,6 +107,7 @@ class PipelineFlow(PipelineComponent):
             result = self.component(**flow_data)
         except StopPipelineFlag:
             raise StopFlowFlag()
+
         # if self.update_pipe_data:
         #     result_data = dict(**kwargs, **result)
         # else:

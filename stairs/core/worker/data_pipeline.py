@@ -215,8 +215,8 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_worker(self, app_worker, name=None, config=None,
-                         update_pipe_data=True):
+    def subscribe_pipeline(self, app_worker, name=None, config=None,
+                           update_pipe_data=True):
         data_pipeline = copy.copy(self.data_pipeline)
         id = data_pipeline.get_unique_id(name or 'worker')
 
@@ -276,11 +276,11 @@ class DataFrame:
                                    as_worker=as_worker,
                                    update_pipe_data=False)
 
-    def apply_worker(self, app_worker, name=None, config=None,
+    def apply_pipeline(self, app_worker, name=None, config=None,
                     update_pipe_data=True):
 
-        return self.subscribe_worker(app_worker, name=name, config=config,
-                                     update_pipe_data=update_pipe_data)
+        return self.subscribe_pipeline(app_worker, name=name, config=config,
+                                       update_pipe_data=update_pipe_data)
 
 
 class DataPoint(DataFrame):

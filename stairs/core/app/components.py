@@ -44,7 +44,7 @@ class AppComponents:
     def __init__(self):
         self.producers = self.Components()
         self.workers = self.Components()
-        self.outputs = self.Components()
+        self.consumers = self.Components()
         self.flows = self.Components()
         self.steps = self.Components()
 
@@ -78,7 +78,7 @@ class AppStep(AppBaseComponent):
 class AppOutput(AppBaseComponent):
     def __init__(self, app):
         self.app = app
-        app.components.outputs.add_component(self)
+        app.components.consumers.add_component(self)
 
 
 class AppFlow(AppBaseComponent):
