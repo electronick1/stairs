@@ -1,7 +1,6 @@
+import types
 import uuid
 import types
-
-import stepist
 
 from stepist.flow.steps.next_step import call_next_step
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
@@ -33,6 +32,13 @@ class PipelineComponent:
         return self.key()
 
     def key(self):
+
+        if isinstance(self.component, types.LambdaType):
+            return self.name
+
+        if isinstance(self.component, types.FunctionType):
+            return self.component.__name__
+
         return self.component.key() if self.component else "NotDefined"
 
     def add_context(self, p_component, transformation):

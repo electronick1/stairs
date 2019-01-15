@@ -1,7 +1,6 @@
 import copy
-
+import uuid
 from stepist.flow.steps.next_step import call_next_step as stepist_next_step
-import stepist
 
 from stairs.core.worker.pipeline_objects import (PipelineFlow,
                                                  PipelineFlowProducer,
@@ -262,7 +261,8 @@ class DataFrame:
                                        as_worker=as_worker,
                                        id=id,
                                        name=name,
-                                       config=config)
+                                       config=config,
+                                       update_pipe_data=update_pipe_data)
 
         data_pipeline.add_pipeline_component(
             p_component,
@@ -281,6 +281,14 @@ class DataFrame:
 
         return self.subscribe_pipeline(app_worker, name=name, config=config,
                                        update_pipe_data=update_pipe_data)
+
+    def add_value(self, **kwargs):
+        func = lambda **k: kwargs
+
+        # it's safe to use uuid4 as name, because it can't be a worker
+        return self.subscribe_func(func,
+                                   name=uuid.uuid4(),
+                                   as_worker=False)
 
 
 class DataPoint(DataFrame):
