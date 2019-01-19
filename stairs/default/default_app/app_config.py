@@ -1,3 +1,3 @@
 from stairs import App
 
-app = App()
+app = App('myapp')

@@ -49,6 +49,10 @@ class Worker(components.AppWorker):
         self.pipeline.compile()
 
     def make_pipeline(self, config=None):
+        if config is None:
+            # TODO: probably we need to update self.config by passed config
+            config = self.config
+
         worker_info = WorkerInfo(self, config=config)
 
         initial_pipeline = data_pipeline.DataPipeline.make_empty(self.app,

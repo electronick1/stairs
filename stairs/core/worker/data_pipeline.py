@@ -65,13 +65,16 @@ class DataPipeline:
 
         return self
 
-    def add_pipeline_graph(self, graph, transformations):
+    def add_pipeline_graph(self, graph, transformation):
         graph_items_affected = self.graph.add_graph_on_leaves(graph)
 
         root_p_component = graph.get_root().p_component
 
         for g_item in graph_items_affected:
-            g_item.p_component.add_context(root_p_component, transformations)
+            g_item.p_component.add_context(
+                root_p_component,
+                transformations_types.KeyToKey(transformation)
+            )
 
     def get_last_item(self):
         return pipeline_graph.get_leaves(self.graph)[0]
@@ -192,8 +195,8 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_flow_as_generator(self, flow, as_worker=False,
-                                    update_pipe_data=True):
+    def subscribe_flow_as_producer(self, flow, as_worker=False,
+                                   update_pipe_data=True):
         data_pipeline = copy.copy(self.data_pipeline)
 
         id = data_pipeline.get_unique_id(flow.key())

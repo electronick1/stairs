@@ -34,17 +34,19 @@ class GraphItem:
     def __str__(self):
         return str(self.id)
 
-    def copy(self):
-        return copy.copy(self)
+    def copy(self, ):
+        return self.__copy__()
 
     def add_next(self, base_item, copy=True):
-
         # it's important to create new Item instance,
         # because otherwise different graph items will have same 'next' values
         if copy:
             self.next.append(base_item.copy())
         else:
             self.next.append(base_item)
+
+    def add_next_graph(self):
+        pass
 
 
 class PipelineGraph:
@@ -141,18 +143,17 @@ class PipelineGraph:
             for new_graph in new_graphs:
                 self.add_graph_root_to_item(item, new_graph.root)
 
+        return current_leaves
+
     def add_graph_on_leaves(self, graph):
         # syntax sugar function
         # mockup under add_graphS_on_leaves
 
-        self.add_graphs_on_leaves(*[graph])
+        return self.add_graphs_on_leaves(*[graph])
 
     def add_graph_root_to_item(self, parrent_item, new_graph_root):
-
         parrent_item.add_next(new_graph_root)
 
-        for item in new_graph_root.next:
-            self.add_graph_root_to_item(new_graph_root, item)
 
 
 # graph utils:

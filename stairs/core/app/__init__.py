@@ -1,10 +1,10 @@
-import inspect
 import importlib
 
 from stairs.core.utils import AttrDict
 
 from stairs.core.app import components
 from stairs.core.app.components_interface import ComponentsMixin
+from stairs.core.app.signals import SignalsMixin
 from stairs.core.session import project_session
 
 
@@ -16,7 +16,7 @@ MODULES_FOR_IMPORT = [
 ]
 
 
-class App(ComponentsMixin):
+class App(ComponentsMixin, SignalsMixin):
 
     """
     Used for collect all components and manage everything inside project.
@@ -45,6 +45,8 @@ class App(ComponentsMixin):
         self.app_name = app_name
 
         self.add_to_project()
+
+        self.send_signal_on_app_created()
 
     def __dir__(self):
         """

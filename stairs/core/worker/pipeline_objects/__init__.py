@@ -79,8 +79,8 @@ class PipelineComponent:
 
         # apply transformation and assign context labels
         for context in self._context_list:
-             data = context.transformation(data_to_transform)
-             output_data.update(context.assign_labels(data))
+            data = context.transformation(data_to_transform)
+            output_data.update(context.assign_labels(data))
 
         return output_data
 

@@ -3,6 +3,7 @@ from stairs.core.producer import Producer
 from stairs.core.app.components import AppWorker
 from stairs.core.output.output_model import Output
 from stairs.core.output.standalone import StandAloneConsumer
+from stairs.core.output.consumer_iter import ConsumerIter
 from stairs.core.worker.worker import Worker
 
 
@@ -46,5 +47,11 @@ class ComponentsMixin:
     def standalone_consumer(self):
         def _handler_wrap(func):
             return StandAloneConsumer(app=self, handler=func)
+
+        return _handler_wrap
+
+    def consumer_iter(self):
+        def _handler_wrap(func):
+            return ConsumerIter(app=self, handler=func)
 
         return _handler_wrap
