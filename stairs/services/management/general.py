@@ -13,12 +13,7 @@ def init_session(name):
     app.get_app_by_name(app_name).get_command(command_name)()
 
 
-@general_cli.command("cli")
-def init_session():
-    shell.get_shell()("Let's go")
-
-
-# @general_cli.command("admin")
-# def init_admin():
-#
-#     admin_server.run_admin_server()
+@general_cli.command("admin")
+def init_admin():
+    from stairs.services.admin import server
+    server.run_admin_server()

@@ -6,13 +6,15 @@ from flask_mako import render_template
 
 from stairs.services.admin import stairs_config, flask_config
 
+from stairs import get_project
+
 basedir = "/Users/oleg/programming/stairs/stairs/services/admin"
 
 app = Flask(import_name='stairs.services.admin.server',
             root_path=flask_config.basedir,#basedir,
             static_folder='templates/static')
 
-#app.config.from_object('stairs.services.admin.flask_config')
+app.config.from_object('stairs.services.admin.flask_config')
 
 mako = MakoTemplates(app)
 
@@ -21,13 +23,14 @@ mako = MakoTemplates(app)
 
 @app.route('/')
 def index():
+    apps = get_project().apps
     return render_template('main.mako',
-                           apps=stairs_config.get_apps())
+                           apps=apps)
 
 
 @app.route('/pipeline/<app_name>/<worker_key>')
 def pipeline(app_name, worker_key):
-    apps = stairs_config.get_apps()
+    apps = get_project().apps
 
     app = [app for app in apps if app.app_name == app_name]
     if len(app) != 1:
@@ -47,7 +50,7 @@ def pipeline(app_name, worker_key):
 
 @app.route('/generator/<app_name>/<generator_key>')
 def generator(app_name, generator_key):
-    apps = stairs_config.get_apps()
+    apps = get_project().apps
 
     app = [app for app in apps if app.app_name == app_name]
     if len(app) != 1:
