@@ -8,4 +8,4 @@ from .core.worker.data_pipeline import concatenate
 
 from .core.app import App
 
-
+from .core.session.project_session import get_project

@@ -63,6 +63,12 @@ class StairsProject:
             for app in self.config.apps:
                 stairs_app.try_to_import(app)
 
+    def get_app(self, name):
+        """
+        Just shortcust for get_app_by_name
+        """
+        return self.get_app_by_name(name)
+
     def get_app_by_name(self, name):
         for app in self.apps:
             if app.app_name == name:

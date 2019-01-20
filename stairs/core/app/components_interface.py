@@ -55,3 +55,12 @@ class ComponentsMixin:
             return ConsumerIter(app=self, handler=func)
 
         return _handler_wrap
+
+    def get_pipeline(self, name):
+        return self.components.workers.get(name)
+
+    def get_producer(self, name):
+        return self.components.producers.get(name)
+
+    def get_consumer(self, name):
+        return self.components.consumers.get(name)
