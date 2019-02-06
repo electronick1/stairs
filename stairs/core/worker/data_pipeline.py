@@ -158,7 +158,7 @@ class DataFrame:
         return DataPoint(self.data_pipeline, {key: key})
 
     def update_by_current_transformation(self, new_transformation) -> dict:
-        for key, value in self.transformation:
+        for key, value in self.transformation.items():
             if value in new_transformation:
                 new_transformation[key] = new_transformation[value]
                 del new_transformation[value]
