@@ -77,10 +77,18 @@ class PipelineComponent:
                 else:
                     output_data[key] = value
 
-        # apply transformation and assign context labels
-        for context in self._context_list:
-            data = context.transformation(data_to_transform)
-            output_data.update(context.assign_labels(data))
+        # in case if component has context list (has next components)
+        # let's reassign data
+        if self._context_list:
+            # apply transformation and assign context labels
+            for context in self._context_list:
+                data = context.transformation(data_to_transform)
+                output_data.update(context.assign_labels(data))
+        else:
+            # in case if current component is last one
+            # and self.udpate_pipe_data, let's keep data
+            if self.update_pipe_data:
+                output_data.update(data_to_transform)
 
         return output_data
 
@@ -118,9 +126,7 @@ class PipelineFlow(PipelineComponent):
         #     result_data = dict(**kwargs, **result)
         # else:
         #     result_data = result
-
         output = self.validate_output_data(dict(**kwargs, **result))
-
         return output
 
 

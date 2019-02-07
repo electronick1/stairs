@@ -50,11 +50,13 @@ class StairsProject:
         self.config = stairs_config.ProjectConfig(**{**self.config, **config})
         self.init_apps()
 
-    def run_pipelines(self) -> None:
+    def run_pipelines(self, die_when_empty=False, die_on_error=True) -> None:
         """
         Iterating over apps and running (listen for jobs) pipelines
         """
-        self.stepist_app.run(self.pipelines_to_run())
+        self.stepist_app.run(self.pipelines_to_run(),
+                             die_on_error=die_on_error,
+                             die_when_empty=die_when_empty)
 
     def add_app(self, app: StairsApp) -> None:
         """
