@@ -1,6 +1,4 @@
 import types
-import uuid
-import types
 
 from stepist.flow.steps.next_step import call_next_step
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
@@ -8,17 +6,17 @@ from stepist.flow.utils import validate_handler_data, StopFlowFlag
 from stairs.core.utils.execeptions import StopPipelineFlag
 
 from stairs.core.worker.pipeline_objects import context as pipeline_context
+from stairs.core.session import unique_id_session
 
 
 class PipelineComponent:
 
-    def __init__(self, pipeline, component, id, config,
-                 as_worker=False, name=None, update_pipe_data=False):
+    def __init__(self, pipeline, component, name, config,
+                 as_worker=False, id=None, update_pipe_data=False):
 
         self.component = component
         self.pipeline = pipeline
 
-        self.id = str(id)
         self.config = config
 
         self.update_pipe_data = update_pipe_data
@@ -26,20 +24,12 @@ class PipelineComponent:
         self._context_list = []
 
         self.as_worker = as_worker
+
+        pre_id = id or name
+        self.id = "%s:%s" % (str(pre_id),
+                             unique_id_session.reserve_id_by_name(pre_id))
         self.name = name
-
-    def __name__(self):
-        return self.key()
-
-    def key(self):
-
-        if isinstance(self.component, types.LambdaType):
-            return self.name
-
-        if isinstance(self.component, types.FunctionType):
-            return self.component.__name__
-
-        return self.component.key() if self.component else "NotDefined"
+        self.stepist_id = None
 
     def add_context(self, p_component, transformation):
         self._context_list.append(
@@ -93,10 +83,8 @@ class PipelineComponent:
         return output_data
 
     def validate_input_data(self, data):
-
         input_data = dict()
         for key, value in data.items():
-
             if pipeline_context.belongs_to_component(self, key):
                 new_key = pipeline_context.unassign_data(self, key)
                 input_data[new_key] = value
@@ -187,7 +175,6 @@ class PipelineInVainComponent(PipelineComponent):
         PipelineComponent.__init__(self,
                                    pipeline=pipeline,
                                    component=None,
-                                   id=uuid.uuid4(),
                                    config=None,
                                    as_worker=False,
                                    name=name)

@@ -29,7 +29,7 @@ class DataPipeline:
             graph = pipeline_graph.PipelineGraph()
 
             if initial_component is None:
-                initial_component = PipelineInVainComponent(pipeline=self)
+                initial_component = self.get_initial_component(worker_info)
 
             graph.add_pipeline_component(initial_component)
 
@@ -42,12 +42,12 @@ class DataPipeline:
 
         stepist_next_step(self.get_stepist_root(), **kwargs)
 
-    def __copy__(self):
+    def deepcopy(self):
         cls = self.__class__
 
         return cls(self.app,
                    worker_info=self.worker_info,
-                   graph=copy.copy(self.graph))
+                   graph=self.graph.deepcopy())
 
     def keys(self):
         if not self.graph.is_line_tree():
@@ -88,46 +88,29 @@ class DataPipeline:
     def is_compiled(self):
         return bool(self.stepist_steps)
 
+    def get_stepist_id(self, component_id):
+        return "%s:%s" % (self.worker_info.key(), component_id)
+
     # utils:
-
-    def stepist_component_id(self, component, index=0):
-        return "%s:%s:%s" % (self.worker_info.key(),
-                             component.id,
-                             index)
-
     def get_stepist_root(self):
         root_component = self.graph.get_root().p_component
-        stepist_id = self.stepist_component_id(root_component)
+        stepist_id = self.get_stepist_id(root_component.id)
 
         return self.stepist_steps[stepist_id]
-
-    def get_unique_id(self, name):
-        # TODO: make proper name generator
-        name = str(name)
-
-        # preffix = ''
-        # for i in range(self.flows_count() + 1):
-        #     if name + preffix not in self.flows:
-        #         return name + preffix
-        #
-        #     preffix = '_%s' % i
-
-        import uuid
-        if not name:
-            name = uuid.uuid4()
-
-        return self.get_worker_id(name)
-
-    def get_worker_id(self, pipeline_object_id):
-        return "%s:%s" % (self.worker_info.key(), pipeline_object_id)
 
     @classmethod
     def make_empty(cls, app, worker_info):
         return cls(
             app,
             worker_info,
-            initial_component=PipelineInVainComponent(pipeline=None,
-                                                      name="root")
+            initial_component=cls.get_initial_component(worker_info)
+        )
+
+    @classmethod
+    def get_initial_component(cls, worker_info):
+        return PipelineInVainComponent(
+            pipeline=None,
+            name="%s:root" % worker_info.key()
         )
 
 
@@ -172,18 +155,15 @@ class DataFrame:
 
     def subscribe_flow(self, flow, as_worker=False, update_pipe_data=True,
                        name=None):
-        data_pipeline = copy.copy(self.data_pipeline)
+        data_pipeline = self.data_pipeline.deepcopy()
 
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
                                   flow.name())
-
-        id = name or flow.key()
         config = data_pipeline.worker_info.config
 
         p_component = PipelineFlow(self.data_pipeline,
                                    flow,
                                    as_worker=as_worker,
-                                   id=id,
                                    name=name,
                                    config=config,
                                    update_pipe_data=update_pipe_data)
@@ -195,18 +175,18 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_flow_as_producer(self, flow, as_worker=False,
+    def subscribe_flow_as_producer(self, flow, as_worker=False, name=None,
                                    update_pipe_data=True):
-        data_pipeline = copy.copy(self.data_pipeline)
+        data_pipeline = self.data_pipeline.deepcopy()
 
-        id = data_pipeline.get_unique_id(flow.key())
+        name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
+                                  flow.name())
         config = data_pipeline.worker_info.config
 
         p_component = PipelineFlowProducer(self.data_pipeline,
                                            flow,
                                            as_worker=as_worker,
-                                           id=id,
-                                           name=flow.key(),
+                                           name=name,
                                            config=config,
                                            update_pipe_data=update_pipe_data)
 
@@ -217,29 +197,26 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_pipeline(self, app_worker, name=None, config=None,
-                           update_pipe_data=True):
-        data_pipeline = copy.copy(self.data_pipeline)
-        id = data_pipeline.get_unique_id(name or 'worker')
+    def subscribe_pipeline(self, app_worker, config=None, update_pipe_data=True):
+        data_pipeline = self.data_pipeline.deepcopy()
 
         pipeline = app_worker.make_pipeline(config=config)
-        pipeline.graph.root.p_component.as_worker = True
+        pipeline.graph.get_root().p_component.as_worker = True
 
-        self.data_pipeline.add_pipeline_graph(pipeline.graph,
-                                              self.transformation)
+        data_pipeline.add_pipeline_graph(pipeline.graph,
+                                         self.transformation)
 
         return DataFrame(data_pipeline)
 
     def subscribe_consumer(self, output, name=None, as_worker=False):
-        data_pipeline = copy.copy(self.data_pipeline)
+        data_pipeline = self.data_pipeline.deepcopy()
 
-        name = name or "%s:%s" % ("output", output.name())
-
+        name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
+                                  output.name())
         p_component = PipelineOutput(
             self.data_pipeline,
             name=name,
             component=output,
-            id=name,
             config=data_pipeline.worker_info.config,
             as_worker=as_worker,
             update_pipe_data=False
@@ -254,15 +231,15 @@ class DataFrame:
 
     def subscribe_func(self, func, as_worker=False, name=None,
                        update_pipe_data=True):
-        data_pipeline = copy.copy(self.data_pipeline)
+        data_pipeline = self.data_pipeline.deepcopy()
 
-        id = data_pipeline.get_unique_id(func.__name__)
+        name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
+                                  func.__name__)
         config = data_pipeline.worker_info.config
 
         p_component = PipelineFunction(self.data_pipeline,
                                        func,
                                        as_worker=as_worker,
-                                       id=id,
                                        name=name,
                                        config=config,
                                        update_pipe_data=update_pipe_data)
@@ -279,10 +256,10 @@ class DataFrame:
                                    as_worker=as_worker,
                                    update_pipe_data=False)
 
-    def apply_pipeline(self, app_worker, name=None, config=None,
-                    update_pipe_data=True):
+    def apply_pipeline(self, app_worker, config=None,
+                       update_pipe_data=True):
 
-        return self.subscribe_pipeline(app_worker, name=name, config=config,
+        return self.subscribe_pipeline(app_worker, config=config,
                                        update_pipe_data=update_pipe_data)
 
     def add_value(self, **kwargs):
@@ -315,25 +292,28 @@ def compile_pipeline(pipeline):
     dfs_iteration = pipeline_graph.dfs(pipeline.graph.get_root(), backward=True)
 
     for i, graph_item in enumerate(dfs_iteration):
-
-        unique_id = pipeline.stepist_component_id(graph_item.p_component)
+        unique_id = pipeline.get_stepist_id(graph_item.p_component.id)
+        graph_item.p_component.stepist_id = unique_id
 
         if len(graph_item.next) == 0:
             step = stepist_app.step(
                 None,
                 as_worker=graph_item.p_component.as_worker,
-                unique_id=unique_id
+                unique_id=unique_id,
+                name=unique_id,
             )(graph_item.p_component)
 
         elif len(graph_item.next) == 1:
             next = graph_item.next[0]
-            next_stepist_id = pipeline.stepist_component_id(next.p_component)
-            next_stepist = stepist_steps.get(next_stepist_id)
+            next_stepist = stepist_steps.get(
+                pipeline.get_stepist_id(next.p_component.id)
+            )
 
             step = stepist_app.step(
                 next_stepist,
                 as_worker=graph_item.p_component.as_worker,
-                unique_id=graph_item.p_component.id
+                unique_id=unique_id,
+                name=unique_id,
             )(graph_item.p_component)
 
         else:
@@ -356,9 +336,10 @@ def concatenate(*data_frames, **data_points):
     if data_points:
         base_pipeline = list(data_points.values())[0].data_pipeline
 
+    invain_name = "%s:%s" % ("concatenate", ",".join(data_points.keys()))
     last_p_component = PipelineInVainComponent(
         pipeline=base_pipeline,
-        name="%s:%s" % ("concatenate", ",".join(data_points.keys())))
+        name=invain_name)
 
     # TODO: check if all data_pipelines_transformations actually transformations
 

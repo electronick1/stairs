@@ -1,4 +1,3 @@
-import copy
 import queue
 
 
@@ -10,23 +9,6 @@ class GraphItem:
         self.id = pipeline_component.id
         self.next = next if next else []
 
-    def __copy__(self, **kwargs):
-        """
-        Special copy for graph, which copy all vertex objects inside.
-
-        IMPORTANT:
-        You should not use deepcopy for graph, because pipeline components
-        has stepist key (stepist object) and it shouldn't be duplicated.
-
-        """
-        item = self.__class__(self.p_component,
-                              next=[])
-
-        for n in self.next:
-            item.next.append(copy.copy(n))
-        
-        return item
-
     def __eq__(self, other):
         return self.p_component.id == \
                other.p_component.id
@@ -34,14 +16,18 @@ class GraphItem:
     def __str__(self):
         return str(self.id)
 
-    def copy(self, ):
-        return self.__copy__()
+    def deepcopy(self, ):
+        item = self.__class__(self.p_component, next=[])
 
-    def add_next(self, base_item, copy=True):
+        for n in self.next:
+            item.next.append(n.deepcopy())
+        return item
+
+    def add_next(self, base_item, with_deep_copy=False):
         # it's important to create new Item instance,
         # because otherwise different graph items will have same 'next' values
-        if copy:
-            self.next.append(base_item.copy())
+        if with_deep_copy:
+            self.next.append(base_item.deepcopy())
         else:
             self.next.append(base_item)
 
@@ -66,17 +52,15 @@ class PipelineGraph:
     def __init__(self, root=None):
         self.root = root
 
-    def __copy__(self):
-        cls = self.__class__
-
-        return cls(root=copy.copy(self.root))
-
     def __str__(self):
         result_items = []
         for item in dfs(self.root):
             result_items.append(str(item))
 
         return str(result_items)
+
+    def deepcopy(self):
+        return PipelineGraph(root=self.root.deepcopy())
 
     def get_root(self):
         """
@@ -114,7 +98,7 @@ class PipelineGraph:
         """
 
         if self.root is None:
-            self.root = new_item.copy()
+            self.root = new_item.deepcopy()
             return
 
         for item in get_leaves(self):
@@ -153,8 +137,6 @@ class PipelineGraph:
 
     def add_graph_root_to_item(self, parrent_item, new_graph_root):
         parrent_item.add_next(new_graph_root)
-
-
 
 # graph utils:
 
@@ -312,7 +294,7 @@ def merge_graphs_by_roots(graph1, graph2):
                     g1_has_item_from_g2 = True
 
             if not g1_has_item_from_g2:
-                different_items_from_g2.append(next_item_g2.copy())
+                different_items_from_g2.append(next_item_g2.deepcopy())
 
         g1_item.next.extend(different_items_from_g2)
 
