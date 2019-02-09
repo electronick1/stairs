@@ -35,8 +35,6 @@ class Flow(metaclass=FlowMeta):
 
         __flow_steps = dict()
 
-        self.__reconnect__()
-
         for flow_step_handler_name in self.__ordered__:
             flow_step_handler = getattr(self, flow_step_handler_name, None)
 
@@ -68,6 +66,8 @@ class Flow(metaclass=FlowMeta):
                               name=flow_step.name)
             __flow_steps[flow_step.handler.__name__] = step
             setattr(self, flow_step.handler.__name__, step)
+
+        self.__reconnect__()
 
         self.__steps = __flow_steps
 

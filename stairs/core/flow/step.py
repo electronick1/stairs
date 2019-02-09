@@ -17,7 +17,7 @@ def step(*next_steps, save_result=False, name=None):
     return wrapper
 
 
-class StairsStepAbstract(object):
+class StairsStepAbstract:
     # handler function which will be process data
     handler = None
 
@@ -34,6 +34,23 @@ class StairsStepAbstract(object):
         return "%s:%s:%s" % (self.flow.key(),
                              self.handler.__name__,
                              self.id)
+
+    def set_next(self, *next_steps):
+        if len(next_steps) == 1:
+            self.step.next_step = next_steps[0].step
+        else:
+            self.step.next_step = Hub(*[s.step for s in next_steps])
+
+    def add_next(self, *next_steps):
+        if self.step.next_step is not None:
+            self.step.next_step = Hub(*[s.step for s in next_steps] +
+                                       [self.step.next.step])
+        else:
+            self.set_next(*next_steps)
+
+    def set(self, save_result=None):
+        if save_result is not None:
+            self.step.save_result = True
 
     def key(self):
         return self.__name__()
@@ -57,19 +74,17 @@ class StairsStep(StairsStepAbstract, AppStep):
         self.id = uuid.uuid4()
 
         if len(next_steps) == 1:
-            self.stepist_next_step = next_steps[0]
-            if self.stepist_next_step is not None:
-                self.stepist_next_step = self.stepist_next_step.step
+            stepist_next_step = next_steps[0]
+            if stepist_next_step is not None:
+                stepist_next_step = stepist_next_step.step
         else:
-            self.stepist_next_step = Hub([s.step for s in next_steps])
-
-        self.save_result = save_result or self.stepist_next_step is None
+            stepist_next_step = Hub(*[s.step for s in next_steps])
 
         self.step = self.pipeline\
             .app\
             .project\
             .stepist_app\
-            .step(self.stepist_next_step,
+            .step(stepist_next_step,
                   unique_id=self.key(),
                   save_result=save_result,
                   name=self.name
@@ -83,7 +98,6 @@ class StairsStep(StairsStepAbstract, AppStep):
         return flow_result
 
     def execute_step(self, **data):
-
         handler_data = validate_handler_data(self.handler, data)
 
         new_data = self.handler(self.flow, **handler_data)
@@ -91,7 +105,7 @@ class StairsStep(StairsStepAbstract, AppStep):
         if new_data:
             data.update(new_data)
 
-        if self.stepist_next_step is None:
+        if self.step.next_step is None:
             return new_data
 
         return data
@@ -104,8 +118,4 @@ class FlowStep:
         self.save_result = save_result
         self.name = name
 
-    def set_next(self, *next_steps):
-        self.next_steps = next_steps
 
-    def add_next(self, *next_steps):
-        self.next_steps = next_steps
