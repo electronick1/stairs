@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stairs-project",
-    version="0.0.0.3",
+    version="0.1.1",
     author="Aleh Shydlouski",
     author_email="oleg.ivye@gmail.com",
     description="Framework for data processing using data pipelines",
@@ -19,11 +19,10 @@ setup(
         'blinker==1.4',
         'click==7.0',
         'ujson==1.35',
-        'flask',
         'stepist'
     ],
     url='https://github.com/electronick1/stairs',
-    download_url='https://github.com/electronick1/stairs/archive/0.0.3.tar.gz',
+    download_url='https://github.com/electronick1/stairs/archive/0.1.1.tar.gz',
     classifiers=[],
     entry_points={'console_scripts': [
         'stairs-admin = stairs.services.management.commands:init_cli',

@@ -58,7 +58,6 @@ class DataPipeline:
 
     def add_pipeline_component(self, p_component, transformation:dict):
         graph_items_affected = self.graph.add_pipeline_component(p_component)
-
         for g_item in graph_items_affected:
             g_item.p_component.add_context(p_component,
                                            transformations_types.KeyToKey(transformation))
@@ -123,7 +122,7 @@ class DataFrame:
         self.transformation = transformation or {}
         self.possible_keys = possible_keys or []
 
-    def make(self, *keys, **transformation):
+    def rename(self, *keys, **transformation):
         # populate transformation by keys
         for key in keys:
             transformation[key] = key
@@ -132,9 +131,9 @@ class DataFrame:
             if isinstance(value, DataPoint):
                 transformation[key] = value.get_key()
 
+        # reverse value to key, because KeyToKey search for values here
         transformation = {v: k for k, v in transformation.items()}
         transformation = self.update_by_current_transformation(transformation)
-
         return self.__class__(self.data_pipeline, transformation)
 
     def get(self, key):
@@ -142,6 +141,9 @@ class DataFrame:
 
     def update_by_current_transformation(self, new_transformation) -> dict:
         for key, value in self.transformation.items():
+            if key == value:
+                continue
+
             if value in new_transformation:
                 new_transformation[key] = new_transformation[value]
                 del new_transformation[value]

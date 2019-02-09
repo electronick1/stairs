@@ -18,6 +18,8 @@ from stairs.core.project import utils
 class StairsProject:
 
     def __init__(self,  stepist_app=None, config_file=None, **config):
+        project_session.set_project(self)
+
         self.apps = []
 
         if config_file:
@@ -25,15 +27,16 @@ class StairsProject:
             config.update(config_file)
 
         self.config = stairs_config.ProjectConfig.init_default()
-        self._update_config(**config)
+        self.config.update(config)
+
+        self.dbs = dbs.DBs(self.config)
 
         if stepist_app is None:
             self.stepist_app = StepistApp(**self.config)
         else:
             self.stepist_app = stepist_app
 
-        self.dbs = dbs.DBs(self.config)
-        project_session.set_project(self)
+        self.init_apps()
 
     @classmethod
     def init_from_file(cls, config_path: str, **init_kwargs):
