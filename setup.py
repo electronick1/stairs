@@ -19,6 +19,7 @@ setup(
         'blinker==1.4',
         'click==7.0',
         'ujson==1.35',
+        'ipython==7.2.0',
         'stepist'
     ],
     url='https://github.com/electronick1/stairs',
