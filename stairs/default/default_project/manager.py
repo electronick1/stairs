@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from stairs.services.management import init_cli
 from stairs.core.project import StairsProject
 
