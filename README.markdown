@@ -1,3 +1,6 @@
+[![PyPI version](https://badge.fury.io/py/stairs-project.svg)](https://badge.fury.io/py/stairs-project)
+
+
 ![stairs](https://electronick1.github.io/stairs_doc/images/stairs_black.svg)
 
 
