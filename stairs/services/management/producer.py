@@ -1,5 +1,5 @@
 import click
-from stairs.core.session import project_session
+from stairs import get_project
 
 
 @click.group()
@@ -9,9 +9,14 @@ def producer_cli():
 
 @producer_cli.command("producer:init_session")
 @click.argument('name')
-def init_session(name):
-    project = project_session.get_project()
-    print("init producer session")
+@click.option('--noprint', '-np', is_flag=True, help="Disable print")
+def init_session(name, noprint):
+    project = get_project()
+    project.set_verbose(not noprint)
+
+    if project.verbose:
+        print("Init producer session")
+
     app_name, producer_name = name.split('.')
     user_app = project.get_app_by_name(app_name)
     user_app.components.producers[producer_name]()
@@ -19,10 +24,14 @@ def init_session(name):
 
 @producer_cli.command("producer:process")
 @click.argument("name")
-def process(name):
-    project = project_session.get_project()
-    print("init producer session")
+@click.option('--noprint', '-np', is_flag=True, help="Disable print")
+def process(name, noprint):
+    project = get_project()
+    project.set_verbose(not noprint)
+
+    if project.verbose:
+        print("Producer started.")
+
     app_name, producer_name = name.split('.')
     user_app = project.get_app_by_name(app_name)
-    print(user_app.components.producers)
     user_app.components.producers[producer_name].process()

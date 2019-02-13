@@ -1,5 +1,5 @@
 import click
-from stairs.core.session import project_session
+from stairs import get_project
 
 
 @click.group()
@@ -9,9 +9,14 @@ def consumer_cli():
 
 @consumer_cli.command("consumer:standalone")
 @click.argument('name')
-def init_session(name):
-    project = project_session.get_project()
-    print("init standalone consumer session")
+@click.option('--noprint', '-np', is_flag=True, help="Disable print")
+def init_session(name, noprint):
+    project = get_project()
+    project.set_verbose(not noprint)
+
+    if project.verbose:
+        print("Standalone consumer started.")
+
     app_name, consumer_name = name.split('.')
     user_app = project.get_app_by_name(app_name)
     user_app.components.consumers[consumer_name].run_worker()

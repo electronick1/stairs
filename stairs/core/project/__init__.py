@@ -17,10 +17,12 @@ from stairs.core.project import utils
 
 class StairsProject:
 
-    def __init__(self,  stepist_app=None, config_file=None, **config):
+    def __init__(self,  stepist_app=None, config_file=None, verbose=None,
+                 **config):
         project_session.set_project(self)
 
         self.apps = []
+        self.verbose = verbose
 
         if config_file:
             config_file = stairs_config.ProjectConfig.load_from_file(config_file)
@@ -122,3 +124,6 @@ class StairsProject:
 
         return components_to_run
 
+    def set_verbose(self, verbose):
+        self.verbose = verbose
+        self.stepist_app.set_verbose(verbose)
