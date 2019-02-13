@@ -79,7 +79,7 @@ class Worker(components.AppWorker):
 
         initial_frames = dict()
         for key in worker_input_keys:
-            data_point = data_pipeline.DataPoint(pipeline, {key: key})
+            data_point = data_pipeline.DataPoint(pipeline.deepcopy(), {key: key})
             initial_frames[key] = data_point
 
         return initial_frames
