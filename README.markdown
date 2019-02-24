@@ -12,5 +12,7 @@ for most of your data related tasks.
 
 Checkout full [Documentation](https://electronick1.github.io/stairs_doc) 
 
-Join [Telegram](https://t.me/stairs_project) 
+Join [Telegram FAQ](https://t.me/joinchat/BYVTE1fRKOel3QbRlh4YTw)
+Join [Telegram](https://t.me/stairs_project) News feed
+
 
