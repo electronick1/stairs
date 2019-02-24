@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="stairs-project",
-    version="0.1.3",
+    version="0.1.4",
     author="Aleh Shydlouski",
     author_email="oleg.ivye@gmail.com",
     description="Framework for data processing using data pipelines",
@@ -20,7 +20,7 @@ setup(
         'click==7.0',
         'ujson==1.35',
         'ipython==7.2.0',
-        'stepist'
+        'stepist==0.1.4'
     ],
     url='https://github.com/electronick1/stairs',
     download_url='https://github.com/electronick1/stairs/archive/0.1.3.tar.gz',

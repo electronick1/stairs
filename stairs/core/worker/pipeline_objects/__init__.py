@@ -1,5 +1,7 @@
 import types
 
+from collections import Iterable
+
 from stepist.flow.steps.next_step import call_next_step
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
 
@@ -130,13 +132,12 @@ class PipelineFlowProducer(PipelineComponent):
         component_data = self.validate_input_data(kwargs)
 
         flow_kwargs = validate_handler_data(self.component, component_data)
-
         try:
             result = self.component(**flow_kwargs)
         except StopPipelineFlag:
             raise StopFlowFlag()
 
-        if isinstance(result, types.GeneratorType):
+        if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
                 if self.update_pipe_data:
                     result_data = dict(**kwargs, **row_data)

@@ -24,12 +24,10 @@ def make(name):
 
     path_to_user_project = './%s' % name
     copy_tree(default_project_path, path_to_user_project)
-    copy_tree(default_app_path, os.path.join(path_to_user_project, name))
+    copy_tree(default_app_path, os.path.join(path_to_user_project, 'core'))
 
     with open(os.path.join(path_to_user_project, 'config.py'), 'r') as config_f:
         config_body = config_f.read()
-
-    config_body = config_body.format(app_name=name)
 
     with open(os.path.join(path_to_user_project, 'config.py'), 'w') as config_f:
         config_f.write(config_body)

@@ -17,9 +17,22 @@ def init_session(name, noprint):
     if project.verbose:
         print("Init producer session")
 
-    app_name, producer_name = name.split('.')
-    user_app = project.get_app_by_name(app_name)
-    user_app.components.producers[producer_name]()
+    if '.' in name:
+        app_name, producer_name = name.split('.')
+        user_app = project.get_app_by_name(app_name)
+        user_app.components.producers[producer_name]()
+    else:
+        producer_component = None
+        for app in get_project().apps:
+            if name in app.components.producers:
+                if producer_component is not None:
+                    print("There is more then one `%s` producer found, "
+                          "please specified app name: app.producer_name")
+                    return
+                else:
+                    producer_component = app.components.producers[name]
+
+        producer_component()
 
 
 @producer_cli.command("producer:process")
@@ -32,6 +45,19 @@ def process(name, noprint):
     if project.verbose:
         print("Producer started.")
 
-    app_name, producer_name = name.split('.')
-    user_app = project.get_app_by_name(app_name)
-    user_app.components.producers[producer_name].process()
+    if '.' in name:
+        app_name, producer_name = name.split('.')
+        user_app = project.get_app_by_name(app_name)
+        user_app.components.producers[producer_name].process()
+    else:
+        producer_component = None
+        for app in get_project().apps:
+            if name in app.components.producers:
+                if producer_component is not None:
+                    print("There is more then one `%s` producer found, "
+                          "please specified app name: app.producer_name")
+                    return
+                else:
+                    producer_component = app.components.producers[name]
+
+        producer_component.process()
