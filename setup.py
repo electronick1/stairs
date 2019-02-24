@@ -20,10 +20,10 @@ setup(
         'click==7.0',
         'ujson==1.35',
         'ipython==7.2.0',
-        'stepist==0.1.4'
+        'stepist==0.1.4.1'
     ],
     url='https://github.com/electronick1/stairs',
-    download_url='https://github.com/electronick1/stairs/archive/0.1.3.tar.gz',
+    download_url='https://github.com/electronick1/stairs/archive/0.1.4.tar.gz',
     classifiers=[],
     entry_points={'console_scripts': [
         'stairs-admin = stairs.services.management.commands:init_cli',
