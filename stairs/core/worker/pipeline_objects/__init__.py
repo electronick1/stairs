@@ -139,11 +139,7 @@ class PipelineFlowProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
-                if self.update_pipe_data:
-                    result_data = dict(**kwargs, **row_data)
-                else:
-                    result_data = row_data
-
+                result_data = dict(**kwargs, **row_data)
                 yield self.validate_output_data(result_data)
         else:
             raise RuntimeError("Flow producer should be a generator")
@@ -155,10 +151,7 @@ class PipelineFunction(PipelineComponent):
         flow_data = validate_handler_data(self.component, component_data)
         result = self.component(**flow_data)
 
-        if self.update_pipe_data:
-            result_data = dict(**kwargs, **result)
-        else:
-            result_data = result
+        result_data = dict(**kwargs, **result)
 
         return self.validate_output_data(result_data)
 
@@ -171,11 +164,7 @@ class PipelineFunctionProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
-                if self.update_pipe_data:
-                    result_data = dict(**kwargs, **row_data)
-                else:
-                    result_data = row_data
-
+                result_data = dict(**kwargs, **row_data)
                 yield self.validate_output_data(result_data)
         else:
             raise RuntimeError("Function producer should be a generator")
