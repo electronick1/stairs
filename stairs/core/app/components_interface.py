@@ -1,10 +1,10 @@
 from stairs.core.producer.adapter import iter_adapter, iter_worker_adapter
 from stairs.core.producer import Producer
-from stairs.core.app.components import AppWorker
+from stairs.core.app.components import AppPipeline
 from stairs.core.output.output_model import Output
 from stairs.core.output.standalone import StandAloneConsumer
 from stairs.core.output.consumer_iter import ConsumerIter
-from stairs.core.worker.worker import Worker
+from stairs.core.worker.worker import Pipeline
 
 
 class ComponentsMixin:
@@ -12,7 +12,7 @@ class ComponentsMixin:
 
     def producer(self, *app_input):
         def _handler_wrap(handler):
-            if isinstance(app_input, AppWorker):
+            if isinstance(app_input, AppPipeline):
                 app_inputs = [app_input]
             else:
                 app_inputs = app_input
@@ -22,19 +22,21 @@ class ComponentsMixin:
 
         return _handler_wrap
 
-    def worker_producer(self, app_input, jobs_manager=None):
+    def worker_producer(self, app_input, auto_init=False, jobs_manager=None):
         def _handler_wrap(handler):
             adapter = iter_worker_adapter.IterWorkerAdapter(app=self,
                                                             handler=handler,
                                                             app_input=app_input,
+                                                            auto_init=auto_init,
                                                             jobs_manager=jobs_manager)
             return Producer(self, adapter=adapter)
 
         return _handler_wrap
 
-    def pipeline(self, config=None):
+    def pipeline(self, config=None, queue_name=None):
+        # TODO: add custom queue name for pipelines.
         def _deco_init(func):
-            return Worker(self, func, config)
+            return Pipeline(self, func, config)
 
         return _deco_init
 
@@ -57,7 +59,7 @@ class ComponentsMixin:
         return _handler_wrap
 
     def get_pipeline(self, name):
-        return self.components.workers.get(name)
+        return self.components.pipelines.get(name)
 
     def get_producer(self, name):
         return self.components.producers.get(name)

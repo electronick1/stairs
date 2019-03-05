@@ -38,7 +38,7 @@ def pipeline(app_name, worker_key):
 
     app = app[0]
 
-    worker = app.components.workers.get(worker_key, None)
+    worker = app.components.pipelines.get(worker_key, None)
     if worker is None:
         raise RuntimeError("Worker not found")
 

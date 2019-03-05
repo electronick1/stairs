@@ -34,7 +34,7 @@
         </div>
         <div class="component_type">
             <p >Pipelines:</p>
-            % for pipeline in app.components.workers.values():
+            % for pipeline in app.components.pipelines.values():
                 <a href="/pipeline/${app.app_name}/${pipeline.key()}">${pipeline.key()}</a>
             % endfor
         </div>

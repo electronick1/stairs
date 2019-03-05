@@ -10,21 +10,22 @@ BITMAP_EXPIRE_TIME = 60  # 1 minute
 
 class JobsManager(object):
 
-    def __init__(self, adapter, max_chunks_online, max_jobs_per_input=1000000):
+    def __init__(self, adapter, max_chunks_online, auto_init=False, max_jobs_per_input=1000000):
         self.adapter = adapter
         self.max_chunks_online = max_chunks_online
-
+        self.auto_init = auto_init
+        
         self.max_jobs_per_input = max_jobs_per_input
+        
 
     def init_producer_workers(self, cursor_chunks_list):
         """
         Add jobs with chunks id, which should be processed.
         """
         redis_db = self.adapter.app.dbs.redis_db
-
         count = len(cursor_chunks_list)
-
         redis_db.setbit(self.worker_checker_key(), count, 0)
+        
 
     def chunks_producer_worker(self, cursor_chunks_list):
         """
@@ -33,6 +34,16 @@ class JobsManager(object):
 
         redis_db = self.adapter.app.dbs.redis_db
         amount_of_chunks = len(cursor_chunks_list)
+
+        if not redis_db.exists(self.worker_checker_key()) and not self.auto_init:
+            print("Looks like worker producer is not initialized")
+            print("Please run producer:init_session or specify auto_init argument")
+            return 
+
+        # In case producer not initilazed and we should auto init producer
+        if not redis_db.exists(self.worker_checker_key()) and self.auto_init:
+            self.init_producer_workers(cursor_chunks_list)
+            
 
         while True:
             # getting random chunks

@@ -56,7 +56,17 @@ class App(ComponentsMixin, SignalsMixin):
         TODO: make better implementation of public components for app object.
         """
         return list(self.components.producers.keys()) + \
-               list(self.components.workers.keys())
+               list(self.components.pipelines.keys())
+
+    def compile_components(self):
+        """
+        Init app components such as pipelines. 
+
+        Unfortunatelly it's not possible to build pipelines "on fly" because
+        some functions inside will not detected properly by python.
+        """
+        for pipeline in self.components.pipelines.items():
+            pipeline.compile()
 
     def add_to_project(self):
         self.project.add_app(self)
@@ -75,5 +85,3 @@ def try_to_import(app_path):
             continue
 
         importlib.import_module(module_path)
-
-

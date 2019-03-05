@@ -14,6 +14,9 @@ class Producer(components.AppProducer):
     def process(self):
         self.adapter.process()
 
+    def flush_all(self):
+        self.adapter.flush_all()
+
     def key(self):
         return self.adapter.handler.__name__
 

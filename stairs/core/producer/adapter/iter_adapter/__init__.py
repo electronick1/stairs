@@ -36,3 +36,7 @@ class IterAdapter(BaseProducerAdapter):
 
         except Exception:
             raise
+    
+    def flush_all(self):
+        for input in self.app_inputs:
+            input.step.flush_all()

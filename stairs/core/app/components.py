@@ -43,7 +43,7 @@ class AppComponents:
 
     def __init__(self):
         self.producers = self.Components()
-        self.workers = self.Components()
+        self.pipelines = self.Components()
         self.consumers = self.Components()
         self.flows = self.Components()
         self.steps = self.Components()
@@ -56,10 +56,10 @@ class AppComponents:
                 print(e)
 
 
-class AppWorker(AppBaseComponent):
+class AppPipeline(AppBaseComponent):
     def __init__(self, app):
         self.app = app
-        app.components.workers.add_component(self)
+        app.components.pipelines.add_component(self)
 
 
 class AppProducer(AppBaseComponent):

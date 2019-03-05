@@ -7,7 +7,7 @@ def producer_cli():
     pass
 
 
-@producer_cli.command("producer:init_session")
+@producer_cli.command("producer:init")
 @click.argument('name')
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
 def init_session(name, noprint):
@@ -15,27 +15,13 @@ def init_session(name, noprint):
     project.set_verbose(not noprint)
 
     if project.verbose:
-        print("Init producer session")
+        print("Init producer session.")
 
-    if '.' in name:
-        app_name, producer_name = name.split('.')
-        user_app = project.get_app_by_name(app_name)
-        user_app.components.producers[producer_name]()
-    else:
-        producer_component = None
-        for app in get_project().apps:
-            if name in app.components.producers:
-                if producer_component is not None:
-                    print("There is more then one `%s` producer found, "
-                          "please specified app name: app.producer_name")
-                    return
-                else:
-                    producer_component = app.components.producers[name]
-
-        producer_component()
+    producer = get_producer_by_name(name)
+    producer()
 
 
-@producer_cli.command("producer:process")
+@producer_cli.command("producer:run")
 @click.argument("name")
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
 def process(name, noprint):
@@ -45,10 +31,34 @@ def process(name, noprint):
     if project.verbose:
         print("Producer started.")
 
+    producer = get_producer_by_name(name)
+    producer.process()
+
+
+@producer_cli.command("producer:flush_all")
+@click.argument("name")
+@click.option('--noconfim', '-nс', is_flag=False, 
+              help="No confirmation message")
+def flush_all(name, noconfirm):
+    if not noconfirm:
+        msg = "Do you want to flush all jobs in %s producer?" % name
+        if click.confirm(msg):
+            noconfirm = True
+
+    if noconfirm:
+        producer = get_producer_by_name(name)
+        producer.flush_all()
+
+    return
+    
+
+# Utils:
+
+def get_producer_by_name(name):
     if '.' in name:
         app_name, producer_name = name.split('.')
         user_app = project.get_app_by_name(app_name)
-        user_app.components.producers[producer_name].process()
+        return user_app.components.producers[producer_name]
     else:
         producer_component = None
         for app in get_project().apps:
@@ -56,8 +66,10 @@ def process(name, noprint):
                 if producer_component is not None:
                     print("There is more then one `%s` producer found, "
                           "please specified app name: app.producer_name")
-                    return
+                    return None
                 else:
+                    # Keep producer component, as we need to check 
+                    # all producers for duplication
                     producer_component = app.components.producers[name]
 
-        producer_component.process()
+        return producer_component

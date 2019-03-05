@@ -17,6 +17,9 @@ class BaseProducerAdapter(object):
     def continue_process(self):
         raise NotImplemented()
 
+    def flush_all(self):
+        raise NotImplemented()
+
     def get_redis_key(self):
         return "producer:%s:%s" % (self.app.app_name,
                                    self.handler.__name__)
