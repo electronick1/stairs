@@ -6,7 +6,8 @@ from stairs.core.worker.pipeline_objects import (PipelineFlow,
                                                  PipelineFlowProducer,
                                                  PipelineOutput,
                                                  PipelineFunction,
-                                                 PipelineInVainComponent)
+                                                 PipelineInVainComponent,
+                                                 PipelineFunctionProducer)
 
 from stairs.core.worker import pipeline_graph
 from stairs.core.worker.pipeline_graph import concatenate_sequentially
@@ -180,9 +181,11 @@ class DataFrame:
     def subscribe_flow_as_producer(self, flow, as_worker=False, name=None,
                                    update_pipe_data=True):
         data_pipeline = self.data_pipeline.deepcopy()
+
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
                                   flow.name())
         config = data_pipeline.worker_info.config
+
         p_component = PipelineFlowProducer(self.data_pipeline,
                                            flow,
                                            as_worker=as_worker,
@@ -219,7 +222,7 @@ class DataFrame:
             component=output,
             config=data_pipeline.worker_info.config,
             as_worker=as_worker,
-            update_pipe_data=False
+            update_pipe_data=True
         )
 
         data_pipeline.add_pipeline_component(
@@ -232,8 +235,10 @@ class DataFrame:
     def subscribe_func(self, func, as_worker=False, name=None,
                        update_pipe_data=True):
         data_pipeline = self.data_pipeline.deepcopy()
+
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
                                   func.__name__)
+
         config = data_pipeline.worker_info.config
         p_component = PipelineFunction(self.data_pipeline,
                                        func,
@@ -248,12 +253,14 @@ class DataFrame:
         )
 
         return DataFrame(data_pipeline)
-    
+
     def subscribe_func_as_producer(self, func, as_worker=False, name=None,
                                    update_pipe_data=True):
+
         data_pipeline = self.data_pipeline.deepcopy()
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
                                   func.__name__)
+
         config = data_pipeline.worker_info.config
         p_component = PipelineFunctionProducer(self.data_pipeline,
                                                func,
@@ -268,6 +275,18 @@ class DataFrame:
         )
         return DataFrame(data_pipeline)
 
+    def apply_func(self, func, as_worker=False, name=None):
+        return self.subscribe_func(func,
+                                   as_worker=as_worker,
+                                   name=name,
+                                   update_pipe_data=False)
+
+    def apply_func_as_producer(self, func, as_worker=False, name=None):
+        return self.subscribe_func_as_producer(func,
+                                               as_worker=as_worker,
+                                               name=name,
+                                               update_pipe_data=False)
+
     def apply_flow(self, flow, as_worker=False,):
         return self.subscribe_flow(flow=flow,
                                    as_worker=as_worker,
@@ -275,22 +294,9 @@ class DataFrame:
 
     def apply_pipeline(self, app_worker, config=None,
                        update_pipe_data=True):
+
         return self.subscribe_pipeline(app_worker, config=config,
                                        update_pipe_data=update_pipe_data)
-    
-    def apply_func(self, func, as_worker=False, name=None):
-        return self.subscribe_func(func, 
-                                   config=config, 
-                                   as_worker=as_worker, 
-                                   name=name,
-                                   update_pipe_data=False)
-
-    def apply_func_as_producer(self, func, as_worker=False, name=None):
-        return self.subscribe_func_as_producer(func, 
-                                               config=config,
-                                               as_worker=as_worker,
-                                               name=name,
-                                               update_pipe_data=False)
 
     def add_value(self, **kwargs):
         func = lambda **k: kwargs
@@ -366,7 +372,8 @@ def concatenate(*data_frames, **data_points):
     if data_points:
         base_pipeline = list(data_points.values())[0].data_pipeline
 
-    invain_name = "%s:%s" % ("concatenate", ",".join(data_points.keys()))
+    keys = sorted(data_points.keys())
+    invain_name = "%s:%s" % ("concatenate", "/".join(keys))
     last_p_component = PipelineInVainComponent(
         pipeline=base_pipeline,
         name=invain_name)
