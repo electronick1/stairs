@@ -222,7 +222,7 @@ class DataFrame:
             component=output,
             config=data_pipeline.worker_info.config,
             as_worker=as_worker,
-            update_pipe_data=False
+            update_pipe_data=True
         )
 
         data_pipeline.add_pipeline_component(
