@@ -112,10 +112,6 @@ class PipelineFlow(PipelineComponent):
         except StopPipelineFlag:
             raise StopFlowFlag()
 
-        # if self.update_pipe_data:
-        #     result_data = dict(**kwargs, **result)
-        # else:
-        #     result_data = result
         output = self.validate_output_data(dict(**kwargs, **result))
         return output
 
@@ -152,7 +148,6 @@ class PipelineFunction(PipelineComponent):
         result = self.component(**flow_data)
 
         result_data = dict(**kwargs, **result)
-
         return self.validate_output_data(result_data)
 
 

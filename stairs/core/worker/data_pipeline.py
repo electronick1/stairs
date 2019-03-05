@@ -372,7 +372,8 @@ def concatenate(*data_frames, **data_points):
     if data_points:
         base_pipeline = list(data_points.values())[0].data_pipeline
 
-    invain_name = "%s:%s" % ("concatenate", ",".join(data_points.keys()))
+    keys = sorted(data_points.keys())
+    invain_name = "%s:%s" % ("concatenate", "/".join(keys))
     last_p_component = PipelineInVainComponent(
         pipeline=base_pipeline,
         name=invain_name)
