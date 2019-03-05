@@ -2,6 +2,7 @@ import click
 from stairs import get_project
 from multiprocessing import Process
 
+
 @click.group()
 def workers_cli():
     pass

@@ -10,14 +10,17 @@ from stairs.core.worker.worker import Pipeline
 class ComponentsMixin:
     components = None
 
-    def producer(self, *app_input):
-        def _handler_wrap(handler):
-            if isinstance(app_input, AppPipeline):
-                app_inputs = [app_input]
+    def producer(self, *pipelines, **custom_pipelines):
+        def _handler_wrap(handler) -> Producer:
+            if isinstance(pipelines, AppPipeline):
+                pipelines_list = [pipelines]
             else:
-                app_inputs = app_input
+                pipelines_list = pipelines
 
-            adapter = iter_adapter.IterAdapter(self, handler, app_inputs)
+            adapter = iter_adapter.IterAdapter(self,
+                                               handler,
+                                               pipelines_list,
+                                               custom_pipelines)
             return Producer(self, adapter=adapter)
 
         return _handler_wrap

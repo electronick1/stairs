@@ -23,8 +23,9 @@ def init_session(name, noprint):
 
 @producer_cli.command("producer:run")
 @click.argument("name")
+@click.argument('pipelines', nargs=-1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
-def process(name, noprint):
+def process(name, pipelines, noprint):
     project = get_project()
     project.set_verbose(not noprint)
 
@@ -32,7 +33,7 @@ def process(name, noprint):
         print("Producer started.")
 
     producer = get_producer_by_name(name)
-    producer.process()
+    producer.process(pipelines or [])
 
 
 @producer_cli.command("producer:flush_all")
@@ -57,7 +58,7 @@ def flush_all(name, noconfirm):
 def get_producer_by_name(name):
     if '.' in name:
         app_name, producer_name = name.split('.')
-        user_app = project.get_app_by_name(app_name)
+        user_app = get_project().get_app_by_name(app_name)
         return user_app.components.producers[producer_name]
     else:
         producer_component = None
