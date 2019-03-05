@@ -6,7 +6,8 @@ from stairs.core.worker.pipeline_objects import (PipelineFlow,
                                                  PipelineFlowProducer,
                                                  PipelineOutput,
                                                  PipelineFunction,
-                                                 PipelineInVainComponent)
+                                                 PipelineInVainComponent,
+                                                 PipelineFunctionProducer)
 
 from stairs.core.worker import pipeline_graph
 from stairs.core.worker.pipeline_graph import concatenate_sequentially
@@ -237,8 +238,8 @@ class DataFrame:
 
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
                                   func.__name__)
-        config = data_pipeline.worker_info.config
 
+        config = data_pipeline.worker_info.config
         p_component = PipelineFunction(self.data_pipeline,
                                        func,
                                        as_worker=as_worker,
@@ -252,6 +253,39 @@ class DataFrame:
         )
 
         return DataFrame(data_pipeline)
+
+    def subscribe_func_as_producer(self, func, as_worker=False, name=None,
+                                   update_pipe_data=True):
+
+        data_pipeline = self.data_pipeline.deepcopy()
+        name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
+                                  func.__name__)
+
+        config = data_pipeline.worker_info.config
+        p_component = PipelineFunctionProducer(self.data_pipeline,
+                                               func,
+                                               as_worker=as_worker,
+                                               name=name,
+                                               config=config,
+                                               update_pipe_data=update_pipe_data)
+
+        data_pipeline.add_pipeline_component(
+            p_component,
+            transformation=self.transformation
+        )
+        return DataFrame(data_pipeline)
+
+    def apply_func(self, func, as_worker=False, name=None):
+        return self.subscribe_func(func,
+                                   as_worker=as_worker,
+                                   name=name,
+                                   update_pipe_data=False)
+
+    def apply_func_as_producer(self, func, as_worker=False, name=None):
+        return self.subscribe_func_as_producer(func,
+                                               as_worker=as_worker,
+                                               name=name,
+                                               update_pipe_data=False)
 
     def apply_flow(self, flow, as_worker=False,):
         return self.subscribe_flow(flow=flow,
