@@ -145,7 +145,7 @@ class PipelineFlowProducer(PipelineComponent):
                 output_row_data = self.validate_output_data(row_data)
                 output = {**output_kwargs, **output_row_data}
 
-                yield self.validate_output_data(output)
+                yield output
         else:
             raise RuntimeError("Flow producer should be a generator")
 
@@ -175,7 +175,7 @@ class PipelineFunctionProducer(PipelineComponent):
                 output_row_data = self.validate_output_data(row_data)
                 output = {**output_kwargs, **output_row_data}
 
-                yield self.validate_output_data(output)
+                yield output
         else:
             raise RuntimeError("Function producer should be a generator")
 

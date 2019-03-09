@@ -38,7 +38,7 @@ class BatchProducer(components.AppProducer):
 
     @producer_retry(5, Exception)
     def send_job_to_producer(self, stepist_job):
-        call_next_step(stepist_job, self.producer.step)
+        call_next_step(stepist_job, self.producer.stepist_step)
 
     def key(self):
         return self.handler.__name__
