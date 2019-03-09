@@ -106,13 +106,17 @@ class PipelineFlow(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
         flow_data = validate_handler_data(self.component, component_data)
-
         try:
             result = self.component(**flow_data)
         except StopPipelineFlag:
             raise StopFlowFlag()
 
-        output = self.validate_output_data(dict(**kwargs, **result))
+        # It's important to run kwargs validation and result validation
+        # separately, otherwise result will be overlap by kwargs
+        output_kwargs = self.validate_output_data(kwargs)
+        output_result = self.validate_output_data(result)
+        output = {**output_kwargs, **output_result}
+
         return output
 
 
@@ -135,8 +139,13 @@ class PipelineFlowProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
-                result_data = dict(**kwargs, **row_data)
-                yield self.validate_output_data(result_data)
+                # It's important to run kwargs validation and result validation
+                # separately, otherwise result will be overlap by kwargs
+                output_kwargs = self.validate_output_data(kwargs)
+                output_row_data = self.validate_output_data(row_data)
+                output = {**output_kwargs, **output_row_data}
+
+                yield self.validate_output_data(output)
         else:
             raise RuntimeError("Flow producer should be a generator")
 
@@ -147,8 +156,9 @@ class PipelineFunction(PipelineComponent):
         flow_data = validate_handler_data(self.component, component_data)
         result = self.component(**flow_data)
 
-        result_data = dict(**kwargs, **result)
-        return self.validate_output_data(result_data)
+        output_kwargs = self.validate_output_data(kwargs)
+        output_result = self.validate_output_data(result)
+        return {**output_kwargs, **output_result}
 
 
 class PipelineFunctionProducer(PipelineComponent):
@@ -159,8 +169,13 @@ class PipelineFunctionProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
-                result_data = dict(**kwargs, **row_data)
-                yield self.validate_output_data(result_data)
+                # It's important to run kwargs validation and result validation
+                # separately, otherwise result will be overlap by kwargs
+                output_kwargs = self.validate_output_data(kwargs)
+                output_row_data = self.validate_output_data(row_data)
+                output = {**output_kwargs, **output_row_data}
+
+                yield self.validate_output_data(output)
         else:
             raise RuntimeError("Function producer should be a generator")
 
