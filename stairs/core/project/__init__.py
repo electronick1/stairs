@@ -69,6 +69,9 @@ class StairsProject:
         """
         self.apps.append(app)
 
+        for app in self.apps:
+            app.compile_components()
+
     def init_apps(self) -> None:
         """
         Iterates over all apps in config and try to import them with all
@@ -78,6 +81,9 @@ class StairsProject:
         if self.config.get('apps', None):
             for app in self.config.apps:
                 stairs_app.try_to_import(app)
+
+        for app in self.apps:
+            app.compile_components()
 
     def get_app(self, name) -> StairsApp:
         """

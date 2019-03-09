@@ -26,7 +26,7 @@ class IterWorkerAdapter(BaseProducerAdapter):
 
     def init_session(self):
         """
-        Init producer session
+        I]nit producer session
         """
         cursor_chunks_list = list(self.handler())
         self.jobs_manager.init_producer_workers(cursor_chunks_list)

@@ -1,6 +1,5 @@
-from stairs.core.producer.adapter import iter_adapter, iter_worker_adapter
-from stairs.core.producer import Producer
-from stairs.core.app.components import AppPipeline
+from stairs.core.producer.producer import Producer
+from stairs.core.producer.batch_producer import BatchProducer
 from stairs.core.output.output_model import Output
 from stairs.core.output.standalone import StandAloneConsumer
 from stairs.core.output.consumer_iter import ConsumerIter
@@ -12,30 +11,21 @@ class ComponentsMixin:
 
     def producer(self, *pipelines, **custom_pipelines):
         def _handler_wrap(handler) -> Producer:
-            if isinstance(pipelines, AppPipeline):
-                pipelines_list = [pipelines]
-            else:
-                pipelines_list = pipelines
+            producer = Producer(app=self,
+                                handler=handler,
+                                default_callbacks=list(pipelines),
+                                custom_callbacks=custom_pipelines)
 
-            adapter = iter_adapter.IterAdapter(self,
-                                               handler,
-                                               pipelines_list,
-                                               custom_pipelines)
-            return Producer(self, adapter=adapter)
+            return producer
 
         return _handler_wrap
 
-    def worker_producer(self, app_input, auto_init=False, jobs_manager=None,
-                        **custom_inputs):
+    def batch_producer(self, producer):
         def _handler_wrap(handler):
-            adapter = iter_worker_adapter.IterWorkerAdapter(app=self,
-                                                            handler=handler,
-                                                            app_input=app_input,
-                                                            auto_init=auto_init,
-                                                            custom_inputs=custom_inputs,
-                                                            jobs_manager=jobs_manager)
-            return Producer(self, adapter=adapter)
-
+            batch_producer = BatchProducer(app=self,
+                                           handler=handler,
+                                           simple_producer=producer)
+            return batch_producer
         return _handler_wrap
 
     def pipeline(self, config=None, queue_name=None):

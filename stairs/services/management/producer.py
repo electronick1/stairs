@@ -1,4 +1,7 @@
 import click
+
+from stairs.core.producer.producer import Producer
+from stairs.core.producer.batch_producer import BatchProducer
 from stairs import get_project
 
 
@@ -7,10 +10,12 @@ def producer_cli():
     pass
 
 
-@producer_cli.command("producer:init")
+@producer_cli.command("producer:run")
 @click.argument('name')
-@click.option('--noprint', '-np', is_flag=True, help="Disable print")
-def init_session(name, noprint):
+@click.argument('pipelines', nargs=-1)
+@click.option('--noprint', '-np', is_flag=True, help="Disable print", default=False)
+@click.option('--nobatch_reading', '-nb', is_flag=True, help="Disable auto reading", default=False)
+def init_session(name, pipelines, noprint, nobatch_reading):
     project = get_project()
     project.set_verbose(not noprint)
 
@@ -18,10 +23,25 @@ def init_session(name, noprint):
         print("Init producer session.")
 
     producer = get_producer_by_name(name)
-    producer()
+
+    if isinstance(producer, Producer):
+        producer.run(pipelines or [], user_args=[], user_kwargs={})
+
+    if isinstance(producer, BatchProducer):
+        producer(*[], **{})
+        if project.verbose:
+            print("Batch producer finished batch generation")
+        if not nobatch_reading:
+            if project.verbose:
+                print("Starting batches reading process ... ")
+            batch_handler = producer.producer
+            batch_handler.run_jobs_processor(pipelines)
+
+    if producer is None:
+        raise RuntimeError("Producer `%s` not found" % name)
 
 
-@producer_cli.command("producer:run")
+@producer_cli.command("producer:run_jobs")
 @click.argument("name")
 @click.argument('pipelines', nargs=-1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
@@ -33,7 +53,16 @@ def process(name, pipelines, noprint):
         print("Producer started.")
 
     producer = get_producer_by_name(name)
-    producer.process(pipelines or [])
+
+    if producer is None:
+        raise RuntimeError("Producer `%s` not found" % name)
+
+    if isinstance(producer, Producer):
+        producer.run_jobs_processor(pipelines)
+
+    if isinstance(producer, BatchProducer):
+        batch_handler = producer.producer
+        batch_handler.run_jobs_processor(pipelines)
 
 
 @producer_cli.command("producer:flush_all")
@@ -67,7 +96,7 @@ def get_producer_by_name(name):
                 if producer_component is not None:
                     print("There is more then one `%s` producer found, "
                           "please specified app name: app.producer_name")
-                    return None
+                    exit()
                 else:
                     # Keep producer component, as we need to check 
                     # all producers for duplication

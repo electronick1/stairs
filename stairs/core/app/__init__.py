@@ -65,8 +65,9 @@ class App(ComponentsMixin, SignalsMixin):
         Unfortunatelly it's not possible to build pipelines "on fly" because
         some functions inside will not detected properly by python.
         """
-        for pipeline in self.components.pipelines.items():
-            pipeline.compile()
+        for pipeline in self.components.pipelines.values():
+            if pipeline.pipeline is None:
+                pipeline.compile()
 
     def add_to_project(self):
         self.project.add_app(self)
