@@ -25,12 +25,14 @@ class ComponentsMixin:
 
         return _handler_wrap
 
-    def worker_producer(self, app_input, auto_init=False, jobs_manager=None):
+    def worker_producer(self, app_input, auto_init=False, jobs_manager=None,
+                        **custom_inputs):
         def _handler_wrap(handler):
             adapter = iter_worker_adapter.IterWorkerAdapter(app=self,
                                                             handler=handler,
                                                             app_input=app_input,
                                                             auto_init=auto_init,
+                                                            custom_inputs=custom_inputs,
                                                             jobs_manager=jobs_manager)
             return Producer(self, adapter=adapter)
 

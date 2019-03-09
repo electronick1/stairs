@@ -34,7 +34,7 @@ class IterAdapter(BaseProducerAdapter):
 
                     pipelines_to_run = list(self.app_inputs)
 
-                    for pipeline_key in custom_pipelines_keys or dict():
+                    for pipeline_key in custom_pipelines_keys or []:
                         if pipeline_key not in self.custom_inputs:
                             print("Pipeline %s not found" % pipeline_key)
                             print("Here available pipelines:")

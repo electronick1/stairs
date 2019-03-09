@@ -8,11 +8,11 @@ class Producer(components.AppProducer):
 
         components.AppProducer.__init__(self, app)
 
-    def __call__(self):
-        self.adapter.init_session()
+    def __call__(self, *args, **kwargs):
+        self.adapter.init_session(*args, **kwargs)
 
-    def process(self):
-        self.adapter.process()
+    def process(self, *args, **kwargs):
+        self.adapter.process(*args, **kwargs)
 
     def flush_all(self):
         self.adapter.flush_all()

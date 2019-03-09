@@ -39,6 +39,9 @@ class Pipeline(components.AppPipeline):
         components.AppPipeline.__init__(self, self.app)
 
     def __call__(self, **kwargs):
+        if not self.pipeline:
+            raise RuntimeError("Seems like pipeline not build yet, call "
+                               "Pipeline.compile() first")
         if not self.pipeline.is_compiled():
             raise RuntimeError("Worker pipeline no compiled, "
                                "run worker.compile()")

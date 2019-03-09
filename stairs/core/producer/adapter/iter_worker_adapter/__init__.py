@@ -11,10 +11,12 @@ class IterWorkerAdapter(BaseProducerAdapter):
 
     jobs_manager = None
 
-    def __init__(self, app, handler, app_input, auto_init=False, jobs_manager=None):
+    def __init__(self, app, handler, app_input, custom_inputs=None,
+                 auto_init=False, jobs_manager=None):
         self.app = app
         self.handler = handler
         self.app_input = app_input
+        self.custom_inputs = custom_inputs
         self.auto_init = auto_init
 
         if jobs_manager is None:
