@@ -1,6 +1,4 @@
-from pyspark import RDD
-
-from stepist.flow.workers import adapters as workers_adapters
+from stepist.flow.workers.adapters import simple_queue, rm_queue, sqs_queue
 
 from stairs.services import spark as spark_workers
 from stairs.core.app import components
@@ -62,9 +60,17 @@ class SparkProducer(components.AppProducer):
 
         worker_engine = self.app.project.stepist_app.worker_engine
 
-        if isinstance(worker_engine, workers_adapters.SimpleQueueAdapter):
+        if isinstance(worker_engine, simple_queue.SimpleQueueAdapter):
             spark_worker = spark_workers\
                 .redis_queue\
+                .get_connection(worker_engine)
+        elif isinstance(worker_engine, rm_queue.RQAdapter):
+            spark_worker = spark_workers \
+                .rm_queue \
+                .get_connection(worker_engine)
+        elif isinstance(worker_engine, sqs_queue.SQSAdapter):
+            spark_worker = spark_workers \
+                .sqs_queue \
                 .get_connection(worker_engine)
         else:
             raise RuntimeError("Spark don't support current queue broken")
@@ -72,7 +78,8 @@ class SparkProducer(components.AppProducer):
         steps_keys_to_run = [c.step.step_key() for c in callbacks_to_run]
         # Running jobs from producer
         spark_rdd = self.handler(*user_args, **user_kwargs)
-        SparkJobs(spark_rdd, spark_worker, steps_keys_to_run).show_must_go_on()
+
+        SparkJobs(spark_worker, steps_keys_to_run).show_must_go_on(spark_rdd)
 
     def get_producer_id(self):
         return "producer:%s:%s" % (self.app.app_name, self.handler.__name__)
@@ -85,17 +92,17 @@ class SparkProducer(components.AppProducer):
 
 
 class SparkJobs:
-    def __init__(self, spark_rdd, spark_worker, steps_keys):
-        self.spark_rdd = spark_rdd,
+    def __init__(self, spark_worker, steps_keys):
         self.spark_worker = spark_worker
         self.steps_keys = steps_keys
 
-    def show_must_go_on(self):
-        self.spark_rdd.foreachRDD(self.handle_rdd)
+    def show_must_go_on(self, spark_rdd):
+        spark_rdd.foreachPartition(self.handle_rdd)
 
     def handle_rdd(self, rdd):
         self.spark_worker.init_connection()
-        rdd.foreach(self)
+        for item in rdd:
+            self(item.asDict())
 
     def __call__(self, row_data):
         for key in self.steps_keys:

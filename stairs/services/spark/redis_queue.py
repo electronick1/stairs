@@ -27,8 +27,8 @@ class RedisConnection:
     def init_connection(self):
         self.connection = Redis(connection_pool=ConnectionPool(
             connection_class=self.connection_class,
-            connection_kwargs=self.connection_kwargs,
-            max_connections=self.max_connections
+            max_connections=self.max_connections,
+            **self.connection_kwargs
         ))
 
     def add_job(self, step_key: str, data):

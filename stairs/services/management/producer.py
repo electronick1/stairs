@@ -2,6 +2,7 @@ import click
 
 from stairs.core.producer.producer import Producer
 from stairs.core.producer.batch_producer import BatchProducer
+from stairs.core.producer.spark_producer import SparkProducer
 from stairs import get_project
 
 
@@ -26,6 +27,7 @@ def init_session(name, pipelines, noprint, nobatch_reading):
 
     if isinstance(producer, Producer):
         producer.run(pipelines or [], user_args=[], user_kwargs={})
+        return
 
     if isinstance(producer, BatchProducer):
         producer(*[], **{})
@@ -37,8 +39,17 @@ def init_session(name, pipelines, noprint, nobatch_reading):
             batch_handler = producer.producer
             batch_handler.run_jobs_processor(pipelines)
 
-    if producer is None:
-        raise RuntimeError("Producer `%s` not found" % name)
+        return
+
+    if isinstance(producer, SparkProducer):
+        import time
+        t1 = time.time()
+        producer.run(pipelines or [], user_args=[], user_kwargs={})
+        t2 = time.time()
+        print(t2 - t1)
+        return
+
+    raise RuntimeError("Producer `%s` not found or not supported" % name)
 
 
 @producer_cli.command("producer:run_jobs")
