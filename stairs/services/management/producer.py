@@ -1,5 +1,6 @@
 import click
 
+from stairs.core.producer.producer import run_jobs_processor
 from stairs.core.producer.producer import Producer
 from stairs.core.producer.batch_producer import BatchProducer
 from stairs.core.producer.spark_producer import SparkProducer
@@ -53,7 +54,7 @@ def init_session(name, pipelines, noprint, nobatch_reading):
 
 
 @producer_cli.command("producer:run_jobs")
-@click.argument("name")
+@click.argument("name", default=None)
 @click.argument('pipelines', nargs=-1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
 def process(name, pipelines, noprint):
@@ -63,17 +64,26 @@ def process(name, pipelines, noprint):
     if project.verbose:
         print("Producer started.")
 
-    producer = get_producer_by_name(name)
+    producers = []
 
-    if producer is None:
-        raise RuntimeError("Producer `%s` not found" % name)
+    if name is None:
+        for app in get_project().apps:
+            producers = producers + app.components.producers.values()
+    else:
+        producer = get_producer_by_name(name)
 
-    if isinstance(producer, Producer):
-        producer.run_jobs_processor(pipelines)
+        if isinstance(producer, Producer):
+           producers.append(producer)
 
-    if isinstance(producer, BatchProducer):
-        batch_handler = producer.producer
-        batch_handler.run_jobs_processor(pipelines)
+        if isinstance(producer, BatchProducer):
+            producers.append(producer.producer)
+
+    if not producers:
+        print("No producers found")
+
+    run_jobs_processor(get_project(),
+                       producers,
+                       custom_callbacks_keys=pipelines)
 
 
 @producer_cli.command("producer:flush_all")

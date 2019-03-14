@@ -92,19 +92,6 @@ class Producer(components.AppProducer):
                  user_kwargs=kwargs,
                  single_transaction=True)
 
-    def run_jobs_processor(self, custom_callbacks_keys: list = None,
-                           die_when_empty=False):
-        """
-        Executing forwarded jobs (from batch producer)
-        """
-        with producer_session.change_custom_callbacks(custom_callbacks_keys):
-            self.stepist_step = self.app \
-                .project \
-                .stepist_app\
-                .run([self.stepist_step],
-                     die_on_error=True,
-                     die_when_empty=die_when_empty)
-
     def send_job(self, job, callbacks_to_run):
         with session.change_flow_ctx({}, {}):
 
@@ -138,3 +125,17 @@ class Producer(components.AppProducer):
 
     def key(self):
         return self.get_handler_name()
+
+
+def run_jobs_processor(project, producers_to_run, custom_callbacks_keys: list = None,
+                       die_when_empty=False):
+    """
+    Executing forwarded jobs (from batch producer)
+    """
+    steps_to_run = [p.stepist_step for p in producers_to_run]
+    with producer_session.change_custom_callbacks(custom_callbacks_keys):
+        project \
+           .stepist_app\
+           .run(steps_to_run,
+                die_on_error=True,
+                die_when_empty=die_when_empty)
