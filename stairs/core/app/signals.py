@@ -9,6 +9,7 @@ class SignalsMixin:
 
         return _wrap_handler
 
-    def send_signal_on_app_created(self):
-        for handler in self.signals_on_app_created:
-            handler(self)
+
+def send_signals(app, handlers):
+    for handler in handlers:
+        handler(app)
