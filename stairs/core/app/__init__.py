@@ -4,7 +4,7 @@ from stairs.core.utils import AttrDict
 
 from stairs.core.app import components
 from stairs.core.app.components_interface import ComponentsMixin
-from stairs.core.app.signals import SignalsMixin
+from stairs.core.app.signals import SignalsMixin, send_signals
 from stairs.core.session import project_session
 
 
@@ -46,8 +46,6 @@ class App(ComponentsMixin, SignalsMixin):
 
         self.add_to_project()
 
-        self.send_signal_on_app_created()
-
     def __dir__(self):
         """
         Me want to make public only components which used in Queue Manager or
@@ -68,6 +66,8 @@ class App(ComponentsMixin, SignalsMixin):
         for pipeline in self.components.pipelines.values():
             if pipeline.pipeline is None:
                 pipeline.compile()
+
+        send_signals(self, self.signals_on_app_created)
 
     def add_to_project(self):
         self.project.add_app(self)
