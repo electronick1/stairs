@@ -23,6 +23,9 @@ class BatchProducer(components.AppProducer):
         jobs_iterator = self.handler(*args, **kwargs)
         self.send_jobs(jobs_iterator)
 
+    def flush(self):
+        self.producer.stepist_step.flush_all()
+
     def send_jobs(self, job_iterator):
         with session.change_flow_ctx({}, {}):
             for job in job_iterator:

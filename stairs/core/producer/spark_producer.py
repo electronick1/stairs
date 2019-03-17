@@ -81,6 +81,13 @@ class SparkProducer(components.AppProducer):
 
         SparkJobs(spark_worker, steps_keys_to_run).show_must_go_on(spark_rdd)
 
+    def flush(self):
+        for pipeline in self.default_callbacks:
+            pipeline.step.flush_all()
+
+        for pipeline in self.custom_callbacks:
+            pipeline.step.flush_all()
+
     def get_producer_id(self):
         return "producer:%s:%s" % (self.app.app_name, self.handler.__name__)
 

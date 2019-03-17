@@ -98,7 +98,7 @@ def flush_all(name, noconfirm):
 
     if noconfirm:
         producer = get_producer_by_name(name)
-        producer.flush_all()
+        producer.flush()
 
     return
     

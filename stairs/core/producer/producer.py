@@ -123,6 +123,13 @@ class Producer(components.AppProducer):
     def get_stepist_step(self):
         return self.stepist_step
 
+    def flush(self):
+        for pipeline in self.default_callbacks:
+            pipeline.step.flush_all()
+
+        for pipeline in self.custom_callbacks:
+            pipeline.step.flush_all()
+
     def key(self):
         return self.get_handler_name()
 
