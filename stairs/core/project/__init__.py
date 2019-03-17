@@ -55,11 +55,18 @@ class StairsProject:
         self.config = stairs_config.ProjectConfig(**{**self.config, **config})
         self.init_apps()
 
-    def run_pipelines(self, die_when_empty=False, die_on_error=True) -> None:
+    def run_pipelines(self, custom_pipelines_to_run=None, die_when_empty=False,
+                      die_on_error=True) -> None:
         """
         Iterating over apps and running (listen for jobs) pipelines
         """
-        self.stepist_app.run(self.pipelines_to_run(),
+        steps_to_run = []
+        for p in custom_pipelines_to_run or []:
+            steps_to_run.extend(p.get_workers_steps())
+
+        steps_to_run = steps_to_run or self.steps_to_run()
+
+        self.stepist_app.run(steps_to_run,
                              die_on_error=die_on_error,
                              die_when_empty=die_when_empty)
 
@@ -115,7 +122,7 @@ class StairsProject:
 
         raise RuntimeError("App not found for function '%s'" % obj.__name__)
 
-    def pipelines_to_run(self) -> List[StepistStep]:
+    def steps_to_run(self) -> List[StepistStep]:
         components_to_run = []
 
         for step in self.stepist_app.get_workers_steps():

@@ -94,6 +94,18 @@ class Pipeline(components.AppPipeline):
 
         return initial_frames
 
+    def get_workers_steps(self):
+        workers_steps = [self.step]
+
+        if not self.pipeline:
+            raise RuntimeError("Pipeline is not compiled")
+
+        for step in self.pipeline.stepist_steps.values():
+            if step.as_worker:
+                workers_steps.append(step)
+
+        return workers_steps
+
     def get_stepist_step(self):
         return self.step
 
