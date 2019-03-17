@@ -10,9 +10,9 @@ def workers_cli():
 
 @workers_cli.command("pipelines:run")
 @click.argument('apps', nargs=-1)
-@click.argument('concurrency', nargs=1, default=1)
+@click.option('--processes', '-p', nargs=1, default=1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
-def run(apps, noprint, concurrency):
+def run(apps, noprint, processes):
     """
     Run workers process
     """
@@ -22,11 +22,11 @@ def run(apps, noprint, concurrency):
     if project.verbose:
         print("Pipelines started")
 
-    processes = []
-    for i in range(concurrency):
+    processes_objects = []
+    for i in range(processes):
         p = Process(target=project.run_pipelines)
         p.start()
-        processes.append(p)
+        processes_objects.append(p)
 
-    for p in processes:
+    for p in processes_objects:
         p.join()

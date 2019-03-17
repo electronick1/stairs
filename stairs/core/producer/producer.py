@@ -3,7 +3,7 @@ from stepist.flow.steps.next_step import call_next_step
 
 from stairs.core.session import producer_session
 from stairs.core.app import components
-from stairs.core.producer.utils import producer_retry
+from stairs.core.producer.utils import producer_retry, custom_callbacks_to_dict
 
 
 class Producer(components.AppProducer):
@@ -13,7 +13,7 @@ class Producer(components.AppProducer):
     DEFAULT_QUEUE_LIMIT = 10 ** 6
 
     def __init__(self, app, handler, default_callbacks: list,
-                 custom_callbacks: dict, queue_limit=None,
+                 custom_callbacks: list, queue_limit=None,
                  single_transaction=False):
 
         self.app = app
@@ -27,7 +27,7 @@ class Producer(components.AppProducer):
         # Callbacks which should be run always
         self.default_callbacks = default_callbacks or []
         # Callbacks which should be run based on user console, input
-        self.custom_callbacks = custom_callbacks
+        self.custom_callbacks = custom_callbacks_to_dict(custom_callbacks or [])
 
         # Stepist step basically to forward jobs to current producer
         # e.g. from Batch Producer
@@ -127,7 +127,7 @@ class Producer(components.AppProducer):
         for pipeline in self.default_callbacks:
             pipeline.step.flush_all()
 
-        for pipeline in self.custom_callbacks:
+        for pipeline in self.custom_callbacks.values():
             pipeline.step.flush_all()
 
     def key(self):

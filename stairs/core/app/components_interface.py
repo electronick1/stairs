@@ -10,18 +10,19 @@ from stairs.core.worker.worker import Pipeline
 class ComponentsMixin:
     components = None
 
-    def producer(self, *pipelines, **custom_pipelines):
+    def producer(self, *pipelines, custom: list=None) -> Producer:
         def _handler_wrap(handler) -> Producer:
+            custom_callbacks = custom or self.components.pipelines.values()
             producer = Producer(app=self,
                                 handler=handler,
                                 default_callbacks=list(pipelines),
-                                custom_callbacks=custom_pipelines)
+                                custom_callbacks=custom_callbacks)
 
             return producer
 
         return _handler_wrap
 
-    def batch_producer(self, producer):
+    def batch_producer(self, producer: Producer) -> BatchProducer:
         def _handler_wrap(handler):
             batch_producer = BatchProducer(app=self,
                                            handler=handler,
@@ -29,43 +30,44 @@ class ComponentsMixin:
             return batch_producer
         return _handler_wrap
 
-    def spark_producer(self, *pipelines, **custom_pipelines):
+    def spark_producer(self, *pipelines, custom: list=None) -> SparkProducer:
         def _handler_wrap(handler) -> Producer:
+            custom_callbacks = custom or self.components.pipelines.values()
             producer = SparkProducer(app=self,
                                      handler=handler,
                                      default_callbacks=list(pipelines),
-                                     custom_callbacks=custom_pipelines)
+                                     custom_callbacks=custom_callbacks)
 
             return producer
 
         return _handler_wrap
 
-    def pipeline(self, config=None, queue_name=None):
+    def pipeline(self, config=None) -> Pipeline:
         # TODO: add custom queue name for pipelines.
         def _deco_init(func):
             return Pipeline(self, func, config)
 
         return _deco_init
 
-    def consumer(self):
+    def consumer(self) -> Output:
         def _handler_wrap(func):
             return Output(app=self, handler=func)
 
         return _handler_wrap
 
-    def standalone_consumer(self):
+    def standalone_consumer(self) -> StandAloneConsumer:
         def _handler_wrap(func):
             return StandAloneConsumer(app=self, handler=func)
 
         return _handler_wrap
 
-    def consumer_iter(self):
+    def consumer_iter(self) -> ConsumerIter:
         def _handler_wrap(func):
             return ConsumerIter(app=self, handler=func)
 
         return _handler_wrap
 
-    def get_pipeline(self, name):
+    def get_pipeline(self, name) -> Pipeline:
         return self.components.pipelines.get(name)
 
     def get_producer(self, name):

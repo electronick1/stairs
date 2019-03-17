@@ -2,6 +2,7 @@ from stepist.flow.workers.adapters import simple_queue, rm_queue, sqs_queue
 
 from stairs.services import spark as spark_workers
 from stairs.core.app import components
+from stairs.core.producer.utils import custom_callbacks_to_dict
 
 
 class SparkProducer(components.AppProducer):
@@ -11,7 +12,7 @@ class SparkProducer(components.AppProducer):
     DEFAULT_QUEUE_LIMIT = 10 ** 6
 
     def __init__(self, app, handler, default_callbacks: list,
-                 custom_callbacks: dict, queue_limit=None):
+                 custom_callbacks: list, queue_limit=None):
 
         self.app = app
 
@@ -23,7 +24,7 @@ class SparkProducer(components.AppProducer):
         # Callbacks which should be run always
         self.default_callbacks = default_callbacks or []
         # Callbacks which should be run based on user console, input
-        self.custom_callbacks = custom_callbacks
+        self.custom_callbacks = custom_callbacks_to_dict(custom_callbacks or [])
 
         components.AppProducer.__init__(self, app)
 
@@ -85,7 +86,7 @@ class SparkProducer(components.AppProducer):
         for pipeline in self.default_callbacks:
             pipeline.step.flush_all()
 
-        for pipeline in self.custom_callbacks:
+        for pipeline in self.custom_callbacks.values():
             pipeline.step.flush_all()
 
     def get_producer_id(self):
