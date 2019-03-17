@@ -100,7 +100,7 @@ class JobsManager(object):
         return "worker_generator:%s" % self.get_queue_key()
 
     def get_queue_key(self):
-        return "stepist::job::%s" % self.adapter.app_input.step.step_key()
+        return "stepist::%s" % self.adapter.app_input.step.step_key()
 
     def chunk_worker_key(self,):
         return "%s:chunk_worker" % self.adapter.get_redis_key(),
