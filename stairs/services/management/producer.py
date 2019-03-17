@@ -38,7 +38,9 @@ def init_session(name, pipelines, noprint, nobatch_reading):
             if project.verbose:
                 print("Starting batches reading process ... ")
             batch_handler = producer.producer
-            batch_handler.run_jobs_processor(pipelines)
+            run_jobs_processor(get_project(),
+                               [batch_handler],
+                               custom_callbacks_keys=pipelines)
 
         return
 
