@@ -31,7 +31,10 @@ def run(pipelines, noprint, processes):
     pipelines_to_run = []
     if pipelines is not None:
         for p in pipelines:
-            pipelines_to_run.append(get_pipeline_by_name(p))
+            p_to_run = get_project().get_pipeline_by_name(p)
+            if p_to_run is None:
+                raise RuntimeError("Pipeline `%s` not found" % p)
+            pipelines_to_run.append(p_to_run)
     else:
         pipelines_to_run = None
 
@@ -44,24 +47,3 @@ def run(pipelines, noprint, processes):
 
     for p in processes_objects:
         p.join()
-
-
-def get_pipeline_by_name(name):
-    if '.' in name:
-        app_name, pipeline_name = name.split('.')
-        user_app = get_project().get_app_by_name(app_name)
-        return user_app.components.pipelines[pipeline_name]
-    else:
-        pipeline_component = None
-        for app in get_project().apps:
-            if name in app.components.pipelines:
-                if pipeline_component is not None:
-                    print("There is more then one `%s` pipeline found, "
-                          "please specified app name: app.pipeline_name")
-                    exit()
-                else:
-                    # Keep pipeline component, as we need to check
-                    # all pipelines for duplication
-                    pipeline_component = app.components.pipelines[name]
-
-        return pipeline_component

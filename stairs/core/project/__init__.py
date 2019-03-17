@@ -140,3 +140,76 @@ class StairsProject:
     def set_verbose(self, verbose):
         self.verbose = verbose
         self.stepist_app.set_verbose(verbose)
+
+    def add_job(self, pipeline_name, **data):
+        pipeline = self.get_pipeline_by_name(pipeline_name)
+        if pipeline is None:
+            raise RuntimeError("Pipeline not found")
+
+        pipeline.add_job(data)
+
+    def get_producer_by_name(self, name):
+        if '.' in name:
+            app_name, producer_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.producers[producer_name]
+        else:
+            producer_component = None
+            for app in self.apps:
+                if name in app.components.producers:
+                    if producer_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` producer found, "
+                            "please specified app name: app.producer_name"
+                            % name
+                        )
+                    else:
+                        # Keep producer component, as we need to check
+                        # all producers for duplication
+                        producer_component = app.components.producers[name]
+
+            return producer_component
+
+    def get_pipeline_by_name(self, name):
+        if '.' in name:
+            app_name, pipeline_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.pipelines[pipeline_name]
+        else:
+            pipeline_component = None
+            for app in self.apps:
+                if name in app.components.pipelines:
+                    if pipeline_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` pipeline found, "
+                            "please specified app name: app.pipeline_name"
+                            % name
+                        )
+                    else:
+                        # Keep pipeline component, as we need to check
+                        # all pipelines for duplication
+                        pipeline_component = app.components.pipelines[name]
+
+            return pipeline_component
+
+    def get_consumer_by_name(self, name):
+        if '.' in name:
+            app_name, consumer_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.consumers[consumer_name]
+        else:
+            consumer_component = None
+            for app in self.apps:
+                if name in app.components.consumers:
+                    if consumer_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` consumer found, "
+                            "please specified app name: app.consumer_name"
+                            % name
+                        )
+                    else:
+                        # Keep consumer component, as we need to check
+                        # all consumers for duplication
+                        consumer_component = app.components.consumers[name]
+
+            return consumer_component

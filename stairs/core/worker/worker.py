@@ -106,6 +106,12 @@ class Pipeline(components.AppPipeline):
 
         return workers_steps
 
+    def add_job(self, data):
+        call_next_step(data, self.step)
+
+    def get_queue_name(self):
+        return self.step.get_queue_name()
+
     def get_stepist_step(self):
         return self.step
 

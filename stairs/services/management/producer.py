@@ -34,7 +34,9 @@ def run(name, pipelines, noprint, nobatch_reading):
     if project.verbose:
         print("Init producer session.")
 
-    producer = get_producer_by_name(name)
+    producer = get_project().get_producer_by_name(name)
+    if producer is None:
+        raise RuntimeError("Producer not found")
 
     if isinstance(producer, Producer):
         producer.run(pipelines or [], user_args=[], user_kwargs={})
@@ -89,7 +91,9 @@ def run_jobs(name, pipelines, noprint):
         for app in get_project().apps:
             producers = producers + app.components.producers.values()
     else:
-        producer = get_producer_by_name(name)
+        producer = get_project().get_producer_by_name(name)
+        if producer is None:
+            raise RuntimeError("Producer not found")
 
         if isinstance(producer, Producer):
            producers.append(producer)
@@ -119,7 +123,9 @@ def flush_all(name, noconfirm):
             noconfirm = True
 
     if noconfirm:
-        producer = get_producer_by_name(name)
+        producer = get_project().get_producer_by_name(name)
+        if producer is None:
+            raise RuntimeError("Producer not found")
         producer.flush()
 
     return
@@ -134,25 +140,3 @@ def list_of_producers():
         for producer_name in app.components.producers:
             print("%s.%s" % (app.app_name, producer_name))
 
-
-# Utils:
-
-def get_producer_by_name(name):
-    if '.' in name:
-        app_name, producer_name = name.split('.')
-        user_app = get_project().get_app_by_name(app_name)
-        return user_app.components.producers[producer_name]
-    else:
-        producer_component = None
-        for app in get_project().apps:
-            if name in app.components.producers:
-                if producer_component is not None:
-                    print("There is more then one `%s` producer found, "
-                          "please specified app name: app.producer_name")
-                    exit()
-                else:
-                    # Keep producer component, as we need to check 
-                    # all producers for duplication
-                    producer_component = app.components.producers[name]
-
-        return producer_component

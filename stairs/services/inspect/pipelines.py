@@ -43,11 +43,11 @@ def get_jobs_count(pipeline):
 def get_from_monitor(app, monitoring_for_sec=10):
     worker_engine = get_project().stepist_app.worker_engine
 
-    step_keys = []
+    steps = []
     for pipeline in app.components.pipelines.values():
-        step_keys.append(pipeline.step.step_key())
+        steps.append(pipeline.step)
 
-    s_push, s_pop = worker_engine.monitor_steps(step_keys,
+    s_push, s_pop = worker_engine.monitor_steps(steps,
                                                 monitoring_for_sec=monitoring_for_sec)
 
     inspects = []

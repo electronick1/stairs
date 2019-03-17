@@ -3,6 +3,7 @@ from stairs.core.worker.worker import Pipeline
 
 from stairs.core.output.standalone import StandAloneConsumer
 
+
 PIPELINES_STEPS_TO_RUN = [
     PipelineComponent,
     Pipeline
@@ -11,4 +12,3 @@ PIPELINES_STEPS_TO_RUN = [
 STANDALONE_CONSUMERS_TO_RUN = [
     StandAloneConsumer
 ]
-
