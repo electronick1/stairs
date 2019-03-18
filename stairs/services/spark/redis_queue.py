@@ -37,5 +37,5 @@ class RedisConnection:
         self.connection.lpush(self.redis_queue_key(step_key), step_data_str)
 
     def redis_queue_key(self, job_key):
-        return "stepist::" % job_key
+        return "stepist::%s" % job_key
 
