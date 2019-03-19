@@ -13,8 +13,8 @@ def project_cli():
 @click.argument('name')
 def make(name):
     """
-    Will make simple project, with basic structure, predefined config, and
-    sample functions.
+    Makes a project, based on default template. It will contain all main
+    stairs components and default app `core`.
     """
 
     default_project_path = os.path.join(_get_stairs_source_path(),

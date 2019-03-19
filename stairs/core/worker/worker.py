@@ -17,14 +17,17 @@ class WorkerInfo:
         return self.base_worker.key()
 
 
-class Worker(components.AppWorker):
+class Pipeline(components.AppPipeline):
     def __init__(self, app, pipeline_builder, worker_config):
         self.pipeline_builder = pipeline_builder
         self.app = app
 
         self.config = worker_config
-        self.pipeline = self.make_pipeline(worker_config)
-        self.compile()
+
+        # None means - not compiled yeat.
+        # call self.compile to make pipeline and 
+        # generate stepist graph
+        self.pipeline = None
 
         self.step = self.app\
             .project\
@@ -33,9 +36,12 @@ class Worker(components.AppWorker):
                   as_worker=True,
                   unique_id=self.get_handler_name())(self)
 
-        components.AppWorker.__init__(self, self.app)
+        components.AppPipeline.__init__(self, self.app)
 
     def __call__(self, **kwargs):
+        if not self.pipeline:
+            raise RuntimeError("Seems like pipeline not build yet, call "
+                               "Pipeline.compile() first")
         if not self.pipeline.is_compiled():
             raise RuntimeError("Worker pipeline no compiled, "
                                "run worker.compile()")
@@ -46,6 +52,10 @@ class Worker(components.AppWorker):
             return list(result.values())[0]
 
     def compile(self):
+        """
+        Making pipeline and compile it to stepist flow. 
+        """
+        self.pipeline = self.make_pipeline(self.config)
         self.pipeline.compile()
 
     def make_pipeline(self, config=None):
@@ -83,6 +93,24 @@ class Worker(components.AppWorker):
             initial_frames[key] = data_point
 
         return initial_frames
+
+    def get_workers_steps(self):
+        workers_steps = [self.step]
+
+        if not self.pipeline:
+            raise RuntimeError("Pipeline is not compiled")
+
+        for step in self.pipeline.stepist_steps.values():
+            if step.as_worker:
+                workers_steps.append(step)
+
+        return workers_steps
+
+    def add_job(self, data):
+        call_next_step(data, self.step)
+
+    def get_queue_name(self):
+        return self.step.get_queue_name()
 
     def get_stepist_step(self):
         return self.step

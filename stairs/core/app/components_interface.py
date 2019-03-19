@@ -1,63 +1,74 @@
-from stairs.core.producer.adapter import iter_adapter, iter_worker_adapter
-from stairs.core.producer import Producer
-from stairs.core.app.components import AppWorker
+from stairs.core.producer.producer import Producer
+from stairs.core.producer.batch_producer import BatchProducer
+from stairs.core.producer.spark_producer import SparkProducer
 from stairs.core.output.output_model import Output
 from stairs.core.output.standalone import StandAloneConsumer
 from stairs.core.output.consumer_iter import ConsumerIter
-from stairs.core.worker.worker import Worker
+from stairs.core.worker.worker import Pipeline
 
 
 class ComponentsMixin:
     components = None
 
-    def producer(self, *app_input):
-        def _handler_wrap(handler):
-            if isinstance(app_input, AppWorker):
-                app_inputs = [app_input]
-            else:
-                app_inputs = app_input
+    def producer(self, *pipelines, custom: list=None) -> Producer:
+        def _handler_wrap(handler) -> Producer:
+            custom_callbacks = custom or self.components.pipelines.values()
+            producer = Producer(app=self,
+                                handler=handler,
+                                default_callbacks=list(pipelines),
+                                custom_callbacks=custom_callbacks)
 
-            adapter = iter_adapter.IterAdapter(self, handler, app_inputs)
-            return Producer(self, adapter=adapter)
-
-        return _handler_wrap
-
-    def worker_producer(self, app_input, jobs_manager=None):
-        def _handler_wrap(handler):
-            adapter = iter_worker_adapter.IterWorkerAdapter(app=self,
-                                                            handler=handler,
-                                                            app_input=app_input,
-                                                            jobs_manager=jobs_manager)
-            return Producer(self, adapter=adapter)
+            return producer
 
         return _handler_wrap
 
-    def pipeline(self, config=None):
+    def batch_producer(self, producer: Producer) -> BatchProducer:
+        def _handler_wrap(handler):
+            batch_producer = BatchProducer(app=self,
+                                           handler=handler,
+                                           simple_producer=producer)
+            return batch_producer
+        return _handler_wrap
+
+    def spark_producer(self, *pipelines, custom: list=None) -> SparkProducer:
+        def _handler_wrap(handler) -> Producer:
+            custom_callbacks = custom or self.components.pipelines.values()
+            producer = SparkProducer(app=self,
+                                     handler=handler,
+                                     default_callbacks=list(pipelines),
+                                     custom_callbacks=custom_callbacks)
+
+            return producer
+
+        return _handler_wrap
+
+    def pipeline(self, config=None) -> Pipeline:
+        # TODO: add custom queue name for pipelines.
         def _deco_init(func):
-            return Worker(self, func, config)
+            return Pipeline(self, func, config)
 
         return _deco_init
 
-    def consumer(self):
+    def consumer(self) -> Output:
         def _handler_wrap(func):
             return Output(app=self, handler=func)
 
         return _handler_wrap
 
-    def standalone_consumer(self):
+    def standalone_consumer(self) -> StandAloneConsumer:
         def _handler_wrap(func):
             return StandAloneConsumer(app=self, handler=func)
 
         return _handler_wrap
 
-    def consumer_iter(self):
+    def consumer_iter(self) -> ConsumerIter:
         def _handler_wrap(func):
             return ConsumerIter(app=self, handler=func)
 
         return _handler_wrap
 
-    def get_pipeline(self, name):
-        return self.components.workers.get(name)
+    def get_pipeline(self, name) -> Pipeline:
+        return self.components.pipelines.get(name)
 
     def get_producer(self, name):
         return self.components.producers.get(name)

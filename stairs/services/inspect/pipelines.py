@@ -7,7 +7,7 @@ from stairs.services.inspect.utils import SimpleQueueStats, MonitorQueueStats
 def get_all(app):
     inspects = []
 
-    for pipeline in app.components.workers.values():
+    for pipeline in app.components.pipelines.values():
         status = get_pipeline_status(pipeline)
         inspects.append(status)
 
@@ -43,16 +43,16 @@ def get_jobs_count(pipeline):
 def get_from_monitor(app, monitoring_for_sec=10):
     worker_engine = get_project().stepist_app.worker_engine
 
-    step_keys = []
-    for pipeline in app.components.workers.values():
-        step_keys.append(pipeline.step.step_key())
+    steps = []
+    for pipeline in app.components.pipelines.values():
+        steps.append(pipeline.step)
 
-    s_push, s_pop = worker_engine.monitor_steps(step_keys,
+    s_push, s_pop = worker_engine.monitor_steps(steps,
                                                 monitoring_for_sec=monitoring_for_sec)
 
     inspects = []
 
-    for pipeline in app.components.workers.values():
+    for pipeline in app.components.pipelines.values():
         step_key = pipeline.step.step_key()
 
         new_jobs = s_push.get(step_key, 0)

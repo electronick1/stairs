@@ -10,5 +10,8 @@ def shell_cli():
 
 @shell_cli.command("shell")
 def init_session():
+    """
+    Start Ipython interactive shell with full stairs project environment.
+    """
     shell = InteractiveShellEmbed()
     shell()

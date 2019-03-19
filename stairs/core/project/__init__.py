@@ -55,11 +55,18 @@ class StairsProject:
         self.config = stairs_config.ProjectConfig(**{**self.config, **config})
         self.init_apps()
 
-    def run_pipelines(self, die_when_empty=False, die_on_error=True) -> None:
+    def run_pipelines(self, custom_pipelines_to_run=None, die_when_empty=False,
+                      die_on_error=True) -> None:
         """
         Iterating over apps and running (listen for jobs) pipelines
         """
-        self.stepist_app.run(self.pipelines_to_run(),
+        steps_to_run = []
+        for p in custom_pipelines_to_run or []:
+            steps_to_run.extend(p.get_workers_steps())
+
+        steps_to_run = steps_to_run or self.steps_to_run()
+
+        self.stepist_app.run(steps_to_run,
                              die_on_error=die_on_error,
                              die_when_empty=die_when_empty)
 
@@ -68,6 +75,9 @@ class StairsProject:
         Register new app in the project
         """
         self.apps.append(app)
+
+        for app in self.apps:
+            app.compile_components()
 
     def init_apps(self) -> None:
         """
@@ -78,6 +88,9 @@ class StairsProject:
         if self.config.get('apps', None):
             for app in self.config.apps:
                 stairs_app.try_to_import(app)
+
+        for app in self.apps:
+            app.compile_components()
 
     def get_app(self, name) -> StairsApp:
         """
@@ -109,7 +122,7 @@ class StairsProject:
 
         raise RuntimeError("App not found for function '%s'" % obj.__name__)
 
-    def pipelines_to_run(self) -> List[StepistStep]:
+    def steps_to_run(self) -> List[StepistStep]:
         components_to_run = []
 
         for step in self.stepist_app.get_workers_steps():
@@ -127,3 +140,76 @@ class StairsProject:
     def set_verbose(self, verbose):
         self.verbose = verbose
         self.stepist_app.set_verbose(verbose)
+
+    def add_job(self, pipeline_name, **data):
+        pipeline = self.get_pipeline_by_name(pipeline_name)
+        if pipeline is None:
+            raise RuntimeError("Pipeline not found")
+
+        pipeline.add_job(data)
+
+    def get_producer_by_name(self, name):
+        if '.' in name:
+            app_name, producer_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.producers[producer_name]
+        else:
+            producer_component = None
+            for app in self.apps:
+                if name in app.components.producers:
+                    if producer_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` producer found, "
+                            "please specified app name: app.producer_name"
+                            % name
+                        )
+                    else:
+                        # Keep producer component, as we need to check
+                        # all producers for duplication
+                        producer_component = app.components.producers[name]
+
+            return producer_component
+
+    def get_pipeline_by_name(self, name):
+        if '.' in name:
+            app_name, pipeline_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.pipelines[pipeline_name]
+        else:
+            pipeline_component = None
+            for app in self.apps:
+                if name in app.components.pipelines:
+                    if pipeline_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` pipeline found, "
+                            "please specified app name: app.pipeline_name"
+                            % name
+                        )
+                    else:
+                        # Keep pipeline component, as we need to check
+                        # all pipelines for duplication
+                        pipeline_component = app.components.pipelines[name]
+
+            return pipeline_component
+
+    def get_consumer_by_name(self, name):
+        if '.' in name:
+            app_name, consumer_name = name.split('.')
+            user_app = self.get_app_by_name(app_name)
+            return user_app.components.consumers[consumer_name]
+        else:
+            consumer_component = None
+            for app in self.apps:
+                if name in app.components.consumers:
+                    if consumer_component is not None:
+                        raise RuntimeError(
+                            "There is more then one `%s` consumer found, "
+                            "please specified app name: app.consumer_name"
+                            % name
+                        )
+                    else:
+                        # Keep consumer component, as we need to check
+                        # all consumers for duplication
+                        consumer_component = app.components.consumers[name]
+
+            return consumer_component
