@@ -1,4 +1,3 @@
-from stairs.services import spark as spark_workers
 from stairs.core.app import components
 from stairs.core.producer.utils import custom_callbacks_to_dict
 
@@ -35,6 +34,11 @@ class SparkProducer(components.AppProducer):
         Execute producer from console with specified args and kwargs.
         Also can have custom callbacks specified there.
         """
+
+        from stairs.services import spark as spark_workers
+        from stepist.flow.workers.adapters import simple_queue, rm_queue, \
+            sqs_queue
+
         custom_callbacks = []
 
         # Basic check for custom producers
@@ -58,9 +62,6 @@ class SparkProducer(components.AppProducer):
         user_kwargs = user_kwargs or dict()
 
         worker_engine = self.app.project.stepist_app.worker_engine
-
-        from stepist.flow.workers.adapters import simple_queue, rm_queue, \
-            sqs_queue
 
         if isinstance(worker_engine, simple_queue.SimpleQueueAdapter):
             spark_worker = spark_workers\

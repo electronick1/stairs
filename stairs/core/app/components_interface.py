@@ -1,6 +1,5 @@
 from stairs.core.producer.producer import Producer
 from stairs.core.producer.batch_producer import BatchProducer
-from stairs.core.producer.spark_producer import SparkProducer
 from stairs.core.output.output_model import Output
 from stairs.core.output.standalone import StandAloneConsumer
 from stairs.core.output.consumer_iter import ConsumerIter
@@ -30,7 +29,9 @@ class ComponentsMixin:
             return batch_producer
         return _handler_wrap
 
-    def spark_producer(self, *pipelines, custom: list=None) -> SparkProducer:
+    def spark_producer(self, *pipelines, custom: list=None):
+        from stairs.core.producer.spark_producer import SparkProducer
+
         def _handler_wrap(handler) -> Producer:
             custom_callbacks = custom or self.components.pipelines.values()
             producer = SparkProducer(app=self,
