@@ -43,8 +43,8 @@ class Producer(components.AppProducer):
     def __call__(self, *args, **kwargs):
         self.run(user_args=args, user_kwargs=kwargs)
 
-    def run(self, custom_callbacks_keys: list = None,
-            single_transaction: bool = False, user_args=None, user_kwargs=None):
+    def run(self, custom_callbacks_keys: list = None, user_args=None,
+            user_kwargs=None):
         """
         Execute producer from console with specified args and kwargs.
         Also can have custom callbacks specified there.
@@ -68,7 +68,7 @@ class Producer(components.AppProducer):
 
         callbacks_to_run = custom_callbacks + self.default_callbacks
 
-        single_transaction = single_transaction or self.single_transaction
+        single_transaction = self.single_transaction
         user_args = user_args or []
         user_kwargs = user_kwargs or dict()
 
@@ -89,8 +89,7 @@ class Producer(components.AppProducer):
         """
         custom_callbacks = producer_session.get_custom_callbacks()
         self.run(custom_callbacks_keys=custom_callbacks,
-                 user_kwargs=kwargs,
-                 single_transaction=True)
+                 user_kwargs=kwargs)
 
     def send_job(self, job, callbacks_to_run):
         with session.change_flow_ctx({}, {}):

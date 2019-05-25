@@ -1,7 +1,7 @@
-import ujson
 import random
 import time
 
+from stairs import get_project
 from stepist.flow.steps.step import StepData
 
 
@@ -39,6 +39,8 @@ class JobsManager(object):
         # In case producer not initilazed and we should auto init producer
         if not redis_db.exists(self.worker_checker_key()) and self.auto_init:
             self.init_producer_workers(cursor_chunks_list)
+
+        pickler = get_project().data_pickler
 
         while True:
             # getting random chunks
@@ -87,11 +89,10 @@ class JobsManager(object):
             iter = cursor_chunks_list[chunk_index]
 
             pipe = redis_db.pipeline()
-
             for row in iter:
                 step_data = StepData(flow_data=row)
                 data = dict(data=step_data.get_dict())
-                pipe.lpush(queue_key, ujson.dumps(data))
+                pipe.lpush(queue_key, pickler.dumps(data))
 
             pipe.setbit(self.worker_checker_key(), chunk_index, 1)
             pipe.execute()

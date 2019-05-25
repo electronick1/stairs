@@ -1,4 +1,5 @@
 import inspect
+import ujson
 
 from typing import List
 
@@ -18,11 +19,12 @@ from stairs.core.project import utils
 class StairsProject:
 
     def __init__(self,  stepist_app=None, config_file=None, verbose=None,
-                 **config):
+                 data_pickeler=ujson, **config):
         project_session.set_project(self)
 
         self.apps = []
         self.verbose = verbose
+        self.data_pickler = data_pickeler
 
         if config_file:
             config_file = stairs_config.ProjectConfig.load_from_file(config_file)
@@ -34,7 +36,8 @@ class StairsProject:
         self.dbs = dbs.DBs(self.config)
 
         if stepist_app is None:
-            self.stepist_app = StepistApp(**self.config)
+            self.stepist_app = StepistApp(data_pickeler=data_pickeler,
+                                          **self.config)
         else:
             self.stepist_app = stepist_app
 

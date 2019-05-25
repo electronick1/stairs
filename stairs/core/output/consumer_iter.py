@@ -1,3 +1,4 @@
+import time
 from stairs.core.session import project_session
 
 from stairs.core.output.output_model import Output
@@ -33,6 +34,10 @@ class ConsumerIter(Output):
 
         while True:
             job = project.stepist_app.worker_engine.receive_job(self.step)
+            if job is None:
+                print("No jobs, waiting ... ")
+                time.sleep(3)
+                continue
             data = self.step.receive_job(**job)
             # it's last step in step and it will be dict with "run_job" key
             yield data.get("run_job")

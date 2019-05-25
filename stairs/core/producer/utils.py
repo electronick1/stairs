@@ -19,6 +19,7 @@ def producer_retry(retries_amount, exceptions, sleep_time=1):
                     time.sleep(sleep_time)
 
             return func(*args, **kwargs)
+
         return wrap_func
     return wrapper
 
