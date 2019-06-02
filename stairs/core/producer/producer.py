@@ -58,6 +58,11 @@ class Producer(components.AppProducer):
                 print("Producer callback `%s` (another producer or pipeline"
                       ") not found." % custom_callback)
                 exit()
+
+            if callback in self.default_callbacks:
+                # skipping callback if it also defined in default callbacks
+                continue
+
             custom_callbacks.append(callback)
 
         # Basic check for callbacks

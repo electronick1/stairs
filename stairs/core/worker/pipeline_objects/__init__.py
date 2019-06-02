@@ -153,6 +153,7 @@ class PipelineFlowProducer(PipelineComponent):
 class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
+
         flow_data = validate_handler_data(self.component, component_data)
         result = self.component(**flow_data)
 
@@ -200,4 +201,5 @@ class PipelineInVainComponent(PipelineComponent):
     def __call__(self, **data):
         data.update(self.validate_input_data(data))
         data = self.validate_output_data(data)
+
         return data

@@ -1,6 +1,6 @@
 import click
 from stairs import get_project
-from multiprocessing import Process
+from multiprocessing import Process, get_context
 
 
 @click.group()
@@ -38,10 +38,14 @@ def run(pipelines, noprint, processes):
     else:
         pipelines_to_run = None
 
+    # Used to copy parent process and don't share data between two different
+    # processes
+    spawn_context = get_context("spawn")
+
     processes_objects = []
     for i in range(processes):
-        p = Process(target=project.run_pipelines,
-                    kwargs=dict(custom_pipelines_to_run=pipelines_to_run))
+        p = spawn_context.Process(target=project.run_pipelines,
+                                   kwargs=dict(custom_pipelines_to_run=pipelines_to_run))
         p.start()
         processes_objects.append(p)
 
