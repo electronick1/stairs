@@ -14,7 +14,7 @@ class ConsumerIter(Output):
         self.step = self.app \
             .project \
             .stepist_app \
-            .step(None, as_worker=True)(self.run_job)
+            .step(None, name=self.key(), as_worker=True)(self.run_job)
 
         components.AppOutput.__init__(self, self.app)
 
@@ -44,3 +44,6 @@ class ConsumerIter(Output):
 
     def run_job(self, **job_data):
         return job_data
+
+    def key(self):
+        return "stairs::consumer_iter::%s" % self.handler.__name__

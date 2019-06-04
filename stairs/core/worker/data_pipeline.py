@@ -205,6 +205,7 @@ class DataFrame:
 
         pipeline = app_worker.make_pipeline(config=config)
         pipeline.graph.get_root().p_component.as_worker = True
+        
 
         data_pipeline.add_pipeline_graph(pipeline.graph,
                                          self.transformation)
