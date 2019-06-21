@@ -2,6 +2,8 @@ import inspect
 
 from stepist.flow.steps.next_step import call_next_step
 
+from stairs.core.project import signals
+
 from stairs.core.app import components
 from stairs.core.worker import data_pipeline
 
@@ -57,6 +59,7 @@ class Pipeline(components.AppPipeline):
         """
         self.pipeline = self.make_pipeline(self.config)
         self.pipeline.compile()
+        signals.on_pipeline_ready(self).send_signal(self)
 
     def make_pipeline(self, config=None):
         if config is None:

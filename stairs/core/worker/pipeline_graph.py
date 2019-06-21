@@ -16,6 +16,9 @@ class GraphItem:
     def __str__(self):
         return str(self.id)
 
+    def reinit_component(self):
+        self.p_component = self.p_component.copy_component()
+
     def deepcopy(self, ):
         item = self.__class__(self.p_component, next=[])
 
@@ -139,6 +142,7 @@ class PipelineGraph:
         parrent_item.add_next(new_graph_root)
 
 # graph utils:
+
 
 def get_leaves(graph):
     if graph.root is None:

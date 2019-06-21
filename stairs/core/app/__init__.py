@@ -2,12 +2,14 @@ import importlib
 
 from stairs.core.utils import AttrDict
 
+from stairs.core.session import project_session
+from stairs.core.project import signals
+
 from stairs.core.app import components
 from stairs.core.app.components_interface import ComponentsMixin
-from stairs.core.app.signals import SignalsMixin, send_signals
-from stairs.core.session import project_session
 
 
+# Default app modules to automatically import when Stairs project initialized
 MODULES_FOR_IMPORT = [
     'app_config',
     'pipelines',
@@ -16,10 +18,9 @@ MODULES_FOR_IMPORT = [
 ]
 
 
-class App(ComponentsMixin, SignalsMixin):
-
+class App(ComponentsMixin):
     """
-    Used for collect all components and manage everything inside project.
+
     """
 
     # app name, extracted from app_package
@@ -31,7 +32,9 @@ class App(ComponentsMixin, SignalsMixin):
     # Project, with full configuration.
     project = None
 
-    def __init__(self, app_name, project=None):
+    def __init__(self,
+                 app_name: str,
+                 project=None):
 
         self.project = project
         if self.project is None:
@@ -67,14 +70,19 @@ class App(ComponentsMixin, SignalsMixin):
             if pipeline.pipeline is None:
                 pipeline.compile()
 
-        send_signals(self, self.signals_on_app_created)
+        signals.on_app_ready(self.app_name).send_signal()
 
     def add_to_project(self):
         self.project.add_app(self)
 
 
-def try_to_import(app_path):
-    app_package = importlib.import_module(app_path)
+def try_to_import(app_path: str):
+    """
+
+    :param app_path:
+    :return:
+    """
+    importlib.import_module(app_path)
 
     for module in MODULES_FOR_IMPORT:
         module_path = "%s.%s" % (app_path, module)

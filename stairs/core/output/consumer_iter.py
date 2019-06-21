@@ -1,4 +1,7 @@
 import time
+
+from stepist.flow.utils import validate_handler_data
+
 from stairs.core.session import project_session
 
 from stairs.core.output.output_model import Output
@@ -20,6 +23,7 @@ class ConsumerIter(Output):
 
     def __call__(self, *args, **kwargs):
         for data in self.jobs_iterator():
+            data = validate_handler_data(self.handler, data)
             yield self.handler(**data)
 
     def jobs_iterator(self):

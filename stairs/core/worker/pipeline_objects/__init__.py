@@ -1,3 +1,4 @@
+import copy
 import types
 
 from collections import Iterable
@@ -27,16 +28,35 @@ class PipelineComponent:
 
         self.as_worker = as_worker
 
-        pre_id = id or name
-        self.id = "%s:%s" % (str(pre_id),
-                             unique_id_session.reserve_id_by_name(pre_id))
+        self.pre_id = id or name
+        self.id = self.gen_unique_id()
         self.name = name
         self.stepist_id = None
+
+    def run_component(self, data):
+        data = validate_handler_data(self.component, data)
+        try:
+            return self.component(**data)
+        except StopPipelineFlag as e:
+            raise StopFlowFlag(e)
 
     def add_context(self, p_component, transformation):
         self._context_list.append(
             pipeline_context.ComponentContext(p_component, transformation)
         )
+
+    def gen_unique_id(self):
+        return "%s:%s" % (
+            str(self.pre_id),
+            unique_id_session.reserve_id_by_name(self.pre_id)
+        )
+
+    def copy_component(self):
+        new_component = copy.copy(self)
+        # regenerate unique id
+        new_component.id = new_component.gen_unique_id()
+
+        return new_component
 
     def validate_output_data(self, data):
         output_data = dict()
@@ -105,11 +125,8 @@ class PipelineFlow(PipelineComponent):
 
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
-        flow_data = validate_handler_data(self.component, component_data)
-        try:
-            result = self.component(**flow_data)
-        except StopPipelineFlag:
-            raise StopFlowFlag()
+
+        result = self.run_component(component_data)
 
         # It's important to run kwargs validation and result validation
         # separately, otherwise result will be overlap by kwargs
@@ -131,11 +148,7 @@ class PipelineFlowProducer(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        flow_kwargs = validate_handler_data(self.component, component_data)
-        try:
-            result = self.component(**flow_kwargs)
-        except StopPipelineFlag:
-            raise StopFlowFlag()
+        result = self.run_component(component_data)
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
@@ -154,8 +167,7 @@ class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        flow_data = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_data)
+        result = self.run_component(component_data)
 
         output_kwargs = self.validate_output_data(kwargs)
         output_result = self.validate_output_data(result)
@@ -165,8 +177,8 @@ class PipelineFunction(PipelineComponent):
 class PipelineFunctionProducer(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
-        flow_data = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_data)
+
+        result = self.run_component(component_data)
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
@@ -189,8 +201,8 @@ class PipelineOutput(PipelineComponent):
         return self.validate_output_data(kwargs)
 
 
-class PipelineInVainComponent(PipelineComponent):
-    def __init__(self, pipeline, name="InVain"):
+class PipelineConnectorComponent(PipelineComponent):
+    def __init__(self, pipeline, name="Connector"):
         PipelineComponent.__init__(self,
                                    pipeline=pipeline,
                                    component=None,

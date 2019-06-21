@@ -1,6 +1,8 @@
+import sys
 import click
+import subprocess
 from stairs import get_project
-from multiprocessing import Process, get_context
+from multiprocessing import get_context
 
 
 @click.group()
@@ -13,7 +15,9 @@ def workers_cli():
 @click.option('--processes', '-p', nargs=1, default=1,
               help="Amount of processes to run in parallel")
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
-def run(pipelines, noprint, processes):
+@click.option('--is_fork', '-if', is_flag=True, default=False,
+              help="If false fork could be applied")
+def run(pipelines, noprint, processes, is_fork):
     """
     Run all or defined pipelines. Process listening for a jobs until you
     press CTRL-C to exit.
@@ -38,16 +42,22 @@ def run(pipelines, noprint, processes):
     else:
         pipelines_to_run = None
 
-    # Used to copy parent process and don't share data between two different
-    # processes
-    spawn_context = get_context("spawn")
+    if processes > 1 and not is_fork:
 
-    processes_objects = []
-    for i in range(processes):
-        p = spawn_context.Process(target=project.run_pipelines,
-                                   kwargs=dict(custom_pipelines_to_run=pipelines_to_run))
-        p.start()
-        processes_objects.append(p)
+        spawn_context = get_context("fork")
 
-    for p in processes_objects:
-        p.join()
+        processes_objects = []
+        for i in range(processes):
+            p = spawn_context.Process(target=exec_current_one)
+            p.start()
+            processes_objects.append(p)
+
+        for p in processes_objects:
+            p.join()
+    else:
+        project.run_pipelines(pipelines_to_run)
+
+
+def exec_current_one():
+    sys.argv.append("--is_fork")
+    subprocess.call([sys.executable] + sys.argv)

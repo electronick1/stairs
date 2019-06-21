@@ -6,7 +6,7 @@ from stairs.core.worker.pipeline_objects import (PipelineFlow,
                                                  PipelineFlowProducer,
                                                  PipelineOutput,
                                                  PipelineFunction,
-                                                 PipelineInVainComponent,
+                                                 PipelineConnectorComponent,
                                                  PipelineFunctionProducer)
 
 from stairs.core.worker import pipeline_graph
@@ -108,7 +108,7 @@ class DataPipeline:
 
     @classmethod
     def get_initial_component(cls, worker_info):
-        return PipelineInVainComponent(
+        return PipelineConnectorComponent(
             pipeline=None,
             name="%s:root" % worker_info.key()
         )
@@ -200,12 +200,44 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_pipeline(self, app_worker, config=None, update_pipe_data=True):
+    def subscribe_pipeline(self, app_worker, config=None):
         data_pipeline = self.data_pipeline.deepcopy()
 
         pipeline = app_worker.make_pipeline(config=config)
+
+        # duplicating the root, and prepare to be worker
+        pipeline.graph.get_root().reinit_component()
+        # set the root of pipeline as a worker
         pipeline.graph.get_root().p_component.as_worker = True
-        
+
+        data_pipeline.add_pipeline_graph(pipeline.graph,
+                                         self.transformation)
+
+        return DataFrame(data_pipeline)
+
+    def call_pipeline(self, pipeline):
+
+        def forward_data_to_pipeline(**kwargs):
+            pipeline.add_job(kwargs)
+            return dict()
+
+        return self.subscribe_func(forward_data_to_pipeline,
+                                   name='call_pipeline:%s' % str(pipeline.key()),
+                                   as_worker=False)
+
+    def apply_pipeline(self, app_worker, config=None):
+        data_pipeline = self.data_pipeline.deepcopy()
+
+        pipeline = app_worker.make_pipeline(config=config)
+
+        # duplicating the root, and prepare to be worker
+        pipeline.graph.get_root().reinit_component()
+        # set the root of pipeline as a worker
+        pipeline.graph.get_root().p_component.as_worker = True
+
+        for leave in pipeline_graph.get_leaves(pipeline.graph):
+            leave.reinit_component()
+            leave.p_component.update_pipe_data = True
 
         data_pipeline.add_pipeline_graph(pipeline.graph,
                                          self.transformation)
@@ -293,12 +325,6 @@ class DataFrame:
                                    as_worker=as_worker,
                                    update_pipe_data=False)
 
-    def apply_pipeline(self, app_worker, config=None,
-                       update_pipe_data=True):
-
-        return self.subscribe_pipeline(app_worker, config=config,
-                                       update_pipe_data=update_pipe_data)
-
     def add_value(self, **kwargs):
         func = lambda **k: kwargs
 
@@ -374,10 +400,10 @@ def concatenate(*data_frames, **data_points):
         base_pipeline = list(data_points.values())[0].data_pipeline
 
     keys = sorted(data_points.keys())
-    invain_name = "%s:%s" % ("concatenate", "/".join(keys))
-    last_p_component = PipelineInVainComponent(
+    connector_name = "%s:%s" % ("concatenate", "/".join(keys))
+    last_p_component = PipelineConnectorComponent(
         pipeline=base_pipeline,
-        name=invain_name)
+        name=connector_name)
 
     # TODO: check if all data_pipelines_transformations actually transformations
 

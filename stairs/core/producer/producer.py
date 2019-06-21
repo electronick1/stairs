@@ -1,9 +1,9 @@
+from functools import wraps
 from stepist.flow import session
 from stepist.flow.steps.next_step import call_next_step
 
-from stairs.core.session import producer_session
 from stairs.core.app import components
-from stairs.core.producer.utils import producer_retry, custom_callbacks_to_dict
+from stairs.core.producer.utils import producer_retry
 
 
 class Producer(components.AppProducer):
@@ -13,8 +13,7 @@ class Producer(components.AppProducer):
     DEFAULT_QUEUE_LIMIT = 10 ** 6
 
     def __init__(self, app, handler, default_callbacks: list,
-                 custom_callbacks: list, queue_limit=None,
-                 single_transaction=False):
+                 queue_limit=None, single_transaction=False):
 
         self.app = app
 
@@ -26,8 +25,6 @@ class Producer(components.AppProducer):
 
         # Callbacks which should be run always
         self.default_callbacks = default_callbacks or []
-        # Callbacks which should be run based on user console, input
-        self.custom_callbacks = custom_callbacks_to_dict(custom_callbacks or [])
 
         # Stepist step basically to forward jobs to current producer
         # e.g. from Batch Producer
@@ -43,35 +40,13 @@ class Producer(components.AppProducer):
     def __call__(self, *args, **kwargs):
         self.run(user_args=args, user_kwargs=kwargs)
 
-    def run(self, custom_callbacks_keys: list = None, user_args=None,
-            user_kwargs=None):
+    def run(self, user_args=None, user_kwargs=None):
         """
         Execute producer from console with specified args and kwargs.
         Also can have custom callbacks specified there.
         """
-        custom_callbacks = []
 
-        # Basic check for custom producers
-        for custom_callback in custom_callbacks_keys or []:
-            callback = self.custom_callbacks.get(custom_callback, None)
-            if callback is None:
-                print("Producer callback `%s` (another producer or pipeline"
-                      ") not found." % custom_callback)
-                exit()
-
-            if callback in self.default_callbacks:
-                # skipping callback if it also defined in default callbacks
-                continue
-
-            custom_callbacks.append(callback)
-
-        # Basic check for callbacks
-        if not custom_callbacks and not self.default_callbacks:
-            print("No callbacks was found, specified default callback or use"
-                  "custom callback")
-            exit()
-
-        callbacks_to_run = custom_callbacks + self.default_callbacks
+        callbacks_to_run = self.default_callbacks
 
         single_transaction = self.single_transaction
         user_args = user_args or []
@@ -92,9 +67,7 @@ class Producer(components.AppProducer):
         Important(!) If you want to use custom callbacks, set them using:
         `producer_session.change_custom_callbacks` contextmanager
         """
-        custom_callbacks = producer_session.get_custom_callbacks()
-        self.run(custom_callbacks_keys=custom_callbacks,
-                 user_kwargs=kwargs)
+        self.run(user_kwargs=kwargs)
 
     def send_job(self, job, callbacks_to_run):
         with session.change_flow_ctx({}, {}):
@@ -118,6 +91,12 @@ class Producer(components.AppProducer):
     def _job_to_stepist(self, stepist_job, step, **kwargs):
         call_next_step(stepist_job, step, **kwargs)
 
+    def redirect_handler(self, handler):
+        producer_chain = lambda *args, **kwargs: handler(self.handler(*args,
+                                                                      **kwargs))
+
+        return wraps(handler)(producer_chain)
+
     def get_producer_id(self):
         return "producer:%s:%s" % (self.app.app_name, self.handler.__name__)
 
@@ -131,22 +110,18 @@ class Producer(components.AppProducer):
         for pipeline in self.default_callbacks:
             pipeline.step.flush_all()
 
-        for pipeline in self.custom_callbacks.values():
-            pipeline.step.flush_all()
-
     def key(self):
         return self.get_handler_name()
 
 
-def run_jobs_processor(project, producers_to_run, custom_callbacks_keys: list = None,
-                       die_when_empty=False):
+def run_jobs_processor(project, producers_to_run, die_when_empty=False):
     """
     Executing forwarded jobs (from batch producer)
     """
     steps_to_run = [p.stepist_step for p in producers_to_run]
-    with producer_session.change_custom_callbacks(custom_callbacks_keys):
-        project \
-           .stepist_app\
-           .run(steps_to_run,
-                die_on_error=True,
-                die_when_empty=die_when_empty)
+
+    project \
+       .stepist_app\
+       .run(steps_to_run,
+            die_on_error=True,
+            die_when_empty=die_when_empty)

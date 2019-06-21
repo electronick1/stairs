@@ -9,13 +9,26 @@ from stairs.core.worker.worker import Pipeline
 class ComponentsMixin:
     components = None
 
-    def producer(self, *pipelines, custom: list=None,
-                 single_transaction=False) -> Producer:
+    def producer_redirect(self, based_on: Producer, *pipelines):
+
         def _handler_wrap(handler) -> Producer:
+            redirect_handler = based_on.redirect_handler(handler)
+
+            producer = Producer(app=self,
+                                handler=redirect_handler,
+                                default_callbacks=list(pipelines),
+                                single_transaction=based_on.single_transaction)
+
+            return producer
+
+        return _handler_wrap
+
+    def producer(self, *pipelines, single_transaction=False):
+        def _handler_wrap(handler) -> Producer:
+
             producer = Producer(app=self,
                                 handler=handler,
                                 default_callbacks=list(pipelines),
-                                custom_callbacks=custom,
                                 single_transaction=single_transaction)
 
             return producer

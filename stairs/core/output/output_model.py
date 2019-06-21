@@ -1,5 +1,7 @@
 import inspect
 
+from stepist.flow.utils import validate_handler_data
+
 from stairs.core.app import components
 
 
@@ -18,6 +20,7 @@ class Output(components.AppOutput):
         components.AppOutput.__init__(self, self.app)
 
     def __call__(self, **data):
+        data = validate_handler_data(self.handler, data)
         output_result = self.handler(**data)
 
         if not self.as_daemon:
