@@ -5,25 +5,25 @@ from stepist.flow.utils import validate_handler_data
 from stairs.core.app import components
 
 
-class Output(components.AppOutput):
+class Consumer(components.AppConsumer):
 
-    def __init__(self, app, handler, as_daemon=False):
+    def __init__(self, app, handler, as_worker=False):
         self.handler = handler
-        self.as_daemon = as_daemon
+        self.as_worker = as_worker
         self.app = app
 
         self.step = self.app\
             .project\
             .stepist_app\
-            .step(None, as_worker=as_daemon)(self)
+            .step(None, as_worker=as_worker)(self)
 
-        components.AppOutput.__init__(self, self.app)
+        components.AppConsumer.__init__(self, self.app)
 
     def __call__(self, **data):
         data = validate_handler_data(self.handler, data)
         output_result = self.handler(**data)
 
-        if not self.as_daemon:
+        if not self.as_worker:
             return output_result
 
     def __name__(self):

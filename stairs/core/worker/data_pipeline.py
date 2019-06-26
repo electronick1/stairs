@@ -244,15 +244,15 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_consumer(self, output, name=None, as_worker=False):
+    def subscribe_consumer(self, consumer, name=None, as_worker=False):
         data_pipeline = self.data_pipeline.deepcopy()
 
         name = name or "%s:%s" % (self.data_pipeline.worker_info.key(),
-                                  output.name())
+                                  consumer.name())
         p_component = PipelineOutput(
             self.data_pipeline,
             name=name,
-            component=output,
+            component=consumer,
             config=data_pipeline.worker_info.config,
             as_worker=as_worker,
             update_pipe_data=True

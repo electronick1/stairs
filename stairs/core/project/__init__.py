@@ -18,12 +18,12 @@ from stairs.core.project import utils, signals
 
 class StairsProject:
     """ StairsProject is the main control component for stairs. It's stores
-    configs files, apps, and db connections. It's allows you to run app
+    configs files, apps, and db connections. It allows you to run app
     components and get access to different parts of the system.
 
     Stairs project consist of a set of Apps. Stairs apps were invited for
-    extensibility and scalability, similar to Flask/Django philosophy.
-    Each stairs app has several components which implement data pipelines and
+    extensibility and flexibility, similar to Flask/Django philosophy.
+    Each stairs app has several components which represents data pipelines and
     ETL concepts.
 
     To create StairsProject you can just create StairsProject instance with
@@ -33,7 +33,7 @@ class StairsProject:
     project = StairsProject()
     ```
 
-    The StairsProject instance (project) will be stored globaly and you can
+    The StairsProject instance (project) will be stored globally and you can
     always access it using stairs sessions:
 
     ```
@@ -53,10 +53,10 @@ class StairsProject:
 
     If you want to change streaming/queues service define custom one:
     ```
-    from stepist import App
+    from stepist import App as StepistApp
     from stepist import RQAdapter, SQSAdapter, RedisAdapter
 
-    stairs_project = StairsProject(App(SQSAdapter()))
+    stairs_project = StairsProject(StepistApp(SQSAdapter()))
     ```
 
     Check more about stepist -> https://github.com/electronick1/stepist

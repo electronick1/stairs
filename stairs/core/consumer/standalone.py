@@ -2,13 +2,13 @@ from stepist.flow.utils import validate_handler_data
 
 from stairs.core.session import project_session
 
-from stairs.core.output.output_model import Output
+from stairs.core.consumer.consumer_model import Consumer
 
 
-class StandAloneConsumer(Output):
+class StandAloneConsumer(Consumer):
 
     def __init__(self, *args, **kwargs):
-        Output.__init__(self, *args, **kwargs, as_daemon=True)
+        Consumer.__init__(self, *args, **kwargs, as_worker=True)
 
     def __call__(self, *args, **kwargs):
         kwargs = validate_handler_data(self.handler, kwargs)

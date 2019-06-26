@@ -10,6 +10,11 @@ def on_app_ready(app_name: str):
     return Signal("on_app_created:%s" % app_name)
 
 
+def on_app_created(app_name: str):
+    # Return app object inside signal handler
+    return Signal("on_app_created:%s" % app_name)
+
+
 def on_pipeline_ready(pipeline):
     # Return pipeline object inside signal handler
     return Signal("on_pipeline_compiled:%s" % pipeline.__name__())

@@ -4,13 +4,13 @@ from stepist.flow.utils import validate_handler_data
 
 from stairs.core.session import project_session
 
-from stairs.core.output.output_model import Output
+from stairs.core.consumer.consumer_model import Consumer
 from stairs.core.app import components
 
 
-class ConsumerIter(Output):
+class ConsumerIter(Consumer):
 
-    def __init__(self, app, handler, as_daemon=False):
+    def __init__(self, app, handler):
         self.handler = handler
         self.app = app
 
@@ -19,7 +19,7 @@ class ConsumerIter(Output):
             .stepist_app \
             .step(None, name=self.key(), as_worker=True)(self.run_job)
 
-        components.AppOutput.__init__(self, self.app)
+        components.AppConsumer.__init__(self, self.app)
 
     def __call__(self, *args, **kwargs):
         for data in self.jobs_iterator():

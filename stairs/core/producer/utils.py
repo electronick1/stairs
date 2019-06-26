@@ -1,7 +1,7 @@
 import time
 import logging
 
-from stairs.core.worker.worker import Pipeline
+from stairs.core.worker.pipeline_model import Pipeline
 
 logger = logging.getLogger(__name__)
 

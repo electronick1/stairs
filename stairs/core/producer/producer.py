@@ -2,6 +2,7 @@ from functools import wraps
 from stepist.flow import session
 from stepist.flow.steps.next_step import call_next_step
 
+from stairs import get_project
 from stairs.core.app import components
 from stairs.core.producer.utils import producer_retry
 
@@ -33,7 +34,7 @@ class Producer(components.AppProducer):
             .stepist_app\
             .step(None,
                   as_worker=True,
-                  unique_id=self.get_producer_id())(self.run_jobs)
+                  unique_id=self.get_producer_id())(self.run)
 
         components.AppProducer.__init__(self, app)
 
@@ -60,14 +61,10 @@ class Producer(components.AppProducer):
             jobs_to_send = list(self.handler(*user_args, **user_kwargs))
             self.send_jobs(jobs_to_send, callbacks_to_run)
 
-    def run_jobs(self, **kwargs):
-        """
-        Stepist Handler for executing forwarded jobs.
-
-        Important(!) If you want to use custom callbacks, set them using:
-        `producer_session.change_custom_callbacks` contextmanager
-        """
-        self.run(user_kwargs=kwargs)
+    def run_jobs(self, die_when_empty=False):
+        run_jobs_processor(project=get_project(),
+                           producers_to_run=[self],
+                           die_when_empty=die_when_empty)
 
     def send_job(self, job, callbacks_to_run):
         with session.change_flow_ctx({}, {}):

@@ -14,10 +14,9 @@ def producer_cli():
 
 @producer_cli.command("producer:run")
 @click.argument('name')
-@click.argument('pipelines', nargs=-1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print", default=False)
 @click.option('--nobatch_reading', '-nb', is_flag=True, help="Disable auto reading", default=False)
-def run(name, pipelines, noprint, nobatch_reading):
+def run(name, noprint, nobatch_reading):
     """
     Run your producer.
 
@@ -39,7 +38,7 @@ def run(name, pipelines, noprint, nobatch_reading):
         raise RuntimeError("Producer not found")
 
     if isinstance(producer, Producer):
-        producer.run(pipelines or [], user_args=[], user_kwargs={})
+        producer.run(user_args=[], user_kwargs={})
         return
 
     if isinstance(producer, BatchProducer):
@@ -53,15 +52,14 @@ def run(name, pipelines, noprint, nobatch_reading):
                 print("Press Ctrl-C to cancel listening")
             batch_handler = producer.producer
             run_jobs_processor(get_project(),
-                               [batch_handler],
-                               custom_callbacks_keys=pipelines)
+                               [batch_handler])
 
         return
 
     if isinstance(producer, SparkProducer):
         import time
         t1 = time.time()
-        producer.run(pipelines or [], user_args=[], user_kwargs={})
+        producer.run(user_args=[], user_kwargs={})
         t2 = time.time()
         print(t2 - t1)
         return
@@ -71,7 +69,6 @@ def run(name, pipelines, noprint, nobatch_reading):
 
 @producer_cli.command("producer:run_jobs")
 @click.argument("name", default=None)
-@click.argument('pipelines', nargs=-1)
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
 def run_jobs(name, pipelines, noprint):
     """
@@ -105,8 +102,7 @@ def run_jobs(name, pipelines, noprint):
         print("No producers found")
 
     run_jobs_processor(get_project(),
-                       producers,
-                       custom_callbacks_keys=pipelines)
+                       producers)
 
 
 @producer_cli.command("producer:flush_all")

@@ -1,7 +1,7 @@
 from stairs.core.worker.pipeline_objects import PipelineComponent
-from stairs.core.worker.worker import Pipeline
+from stairs.core.worker.pipeline_model import Pipeline
 
-from stairs.core.output.standalone import StandAloneConsumer
+from stairs.core.consumer.standalone import StandAloneConsumer
 
 
 PIPELINES_STEPS_TO_RUN = [

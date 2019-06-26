@@ -43,7 +43,6 @@ def run(pipelines, noprint, processes, is_fork):
         pipelines_to_run = None
 
     if processes > 1 and not is_fork:
-
         spawn_context = get_context("fork")
 
         processes_objects = []
