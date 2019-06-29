@@ -2,10 +2,10 @@ from stepist.flow import session
 from stepist.flow.steps.next_step import call_next_step
 
 from stairs.core.producer.utils import producer_retry
-from stairs.core.app import components
+from stairs.core import app_components
 
 
-class BatchProducer(components.AppProducer):
+class BatchProducer(app_components.AppProducer):
     DEFAULT_QUEUE_LIMIT = 10 ** 9
 
     def __init__(self, app, handler, simple_producer, queue_limit=None):
@@ -17,7 +17,7 @@ class BatchProducer(components.AppProducer):
         self.handler = handler
         self.producer = simple_producer
 
-        components.AppProducer.__init__(self, app)
+        app_components.AppProducer.__init__(self, app)
 
     def __call__(self, *args, **kwargs):
         jobs_iterator = self.handler(*args, **kwargs)

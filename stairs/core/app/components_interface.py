@@ -278,7 +278,8 @@ class ComponentsMixin:
             project.run_pipelines(pipelines_to_run)
 
         If you want to achieve true fault tolerance use consumer as a worker
-        `as_worker=True` and make only one db transaction inside.
+        `as_worker=True` inside pipeline and make only one db transaction inside.
+
         """
 
         def _handler_wrap(func) -> Consumer:

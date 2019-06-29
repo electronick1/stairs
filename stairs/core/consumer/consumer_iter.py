@@ -1,11 +1,11 @@
 import time
 
-from stepist.flow.utils import validate_handler_data
+from stepist.flow.steps.next_step import call_next_step
 
 from stairs.core.session import project_session
 
 from stairs.core.consumer.consumer_model import Consumer
-from stairs.core.app import components
+from stairs.core import app_components
 
 
 class ConsumerIter(Consumer):
@@ -19,12 +19,18 @@ class ConsumerIter(Consumer):
             .stepist_app \
             .step(None, name=self.key(), as_worker=True)(self.run_job)
 
-        components.AppConsumer.__init__(self, self.app)
+        app_components.AppConsumer.__init__(self, self.app)
 
     def __call__(self, *args, **kwargs):
+        result = self.handler(*args, **kwargs)
+        call_next_step(result, self.step)
+
+    def iter(self):
+        """
+        User interface for jobs_iterator.
+        """
         for data in self.jobs_iterator():
-            data = validate_handler_data(self.handler, data)
-            yield self.handler(**data)
+            yield data
 
     def jobs_iterator(self):
         """
@@ -38,13 +44,13 @@ class ConsumerIter(Consumer):
 
         while True:
             job = project.stepist_app.worker_engine.receive_job(self.step)
+            print(job)
             if job is None:
                 print("No jobs, waiting ... ")
                 time.sleep(3)
                 continue
-            data = self.step.receive_job(**job)
-            # it's last step in step and it will be dict with "run_job" key
-            yield data.get("run_job")
+
+            yield job.get('flow_data', None)
 
     def run_job(self, **job_data):
         return job_data

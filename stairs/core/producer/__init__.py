@@ -1,12 +1,12 @@
-from stairs.core.app import components
+from stairs.core import app_components
 
 
-class Producer(components.AppProducer):
+class Producer(app_components.AppProducer):
 
     def __init__(self, app, adapter):
         self.adapter = adapter
 
-        components.AppProducer.__init__(self, app)
+        app_components.AppProducer.__init__(self, app)
 
     def __call__(self, *args, **kwargs):
         self.adapter.init_session(*args, **kwargs)

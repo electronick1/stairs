@@ -2,12 +2,11 @@ import inspect
 
 from stepist.flow.steps.next_step import call_next_step
 
-from stairs import get_project
+from stairs.core.session.project_session import get_project
 
-from stairs.core.project import signals
+from stairs.core.utils import signals
 
-from stairs.core.app import App as StairsApp
-from stairs.core.app import components
+from stairs.core import app_components
 from stairs.core.worker import data_pipeline
 
 
@@ -26,7 +25,7 @@ class PipelineInfo:
         return self.pipeline_core.key()
 
 
-class Pipeline(components.AppPipeline):
+class Pipeline(app_components.AppPipeline):
     """
     Pipeline object is a controller which handle pipeline compilation, executing
     functions inside pipeline, and store configuration.
@@ -50,7 +49,7 @@ class Pipeline(components.AppPipeline):
 
     """
     def __init__(self,
-                 app: StairsApp,
+                 app,
                  pipeline_builder,
                  worker_config):
         """
@@ -79,7 +78,7 @@ class Pipeline(components.AppPipeline):
                   as_worker=True,
                   unique_id=self.get_handler_name())(self)
 
-        components.AppPipeline.__init__(self, self.app)
+        app_components.AppPipeline.__init__(self, self.app)
 
     def __call__(self, **kwargs) -> None:
         """
@@ -112,6 +111,9 @@ class Pipeline(components.AppPipeline):
         """
         Run stepist app which listening streaming service and generating
         jobs for pipeline functions.
+
+        It based on components which marked "as_worker" in current pipeline.
+        See self.get_workers_steps for more details
 
         :param die_on_error: If True - exit on error
         :param die_when_empty: If True - exit when streaming service empty
@@ -193,6 +195,14 @@ class Pipeline(components.AppPipeline):
         return initial_frames
 
     def get_workers_steps(self):
+        """
+        Extract components which are behaves as workers.
+
+        Including steps which should be run simultaneously with workers (such
+        as StandAloneConsumer)
+
+        :return: All possible steps which markers `as_worker` inside pipeline
+        """
         workers_steps = [self.step]
 
         if not self.pipeline:

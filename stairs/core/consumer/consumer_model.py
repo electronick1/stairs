@@ -2,10 +2,15 @@ import inspect
 
 from stepist.flow.utils import validate_handler_data
 
-from stairs.core.app import components
+from stairs.core import app_components
 
 
-class Consumer(components.AppConsumer):
+class Consumer(app_components.AppConsumer):
+    """
+    In most cases Consumer shouldn't be a worker, because it's wrapped by
+    PipelineComponent -> PipelineOutput. Execution controlled inside pipeline by
+    user.
+    """
 
     def __init__(self, app, handler, as_worker=False):
         self.handler = handler
@@ -17,7 +22,7 @@ class Consumer(components.AppConsumer):
             .stepist_app\
             .step(None, as_worker=as_worker)(self)
 
-        components.AppConsumer.__init__(self, self.app)
+        app_components.AppConsumer.__init__(self, self.app)
 
     def __call__(self, **data):
         data = validate_handler_data(self.handler, data)

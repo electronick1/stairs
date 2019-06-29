@@ -2,12 +2,12 @@ from functools import wraps
 from stepist.flow import session
 from stepist.flow.steps.next_step import call_next_step
 
-from stairs import get_project
-from stairs.core.app import components
+from stairs.core.session.project_session import get_project
+from stairs.core import app_components
 from stairs.core.producer.utils import producer_retry
 
 
-class Producer(components.AppProducer):
+class Producer(app_components.AppProducer):
     """
 
     """
@@ -36,12 +36,12 @@ class Producer(components.AppProducer):
                   as_worker=True,
                   unique_id=self.get_producer_id())(self.run)
 
-        components.AppProducer.__init__(self, app)
+        app_components.AppProducer.__init__(self, app)
 
-    def __call__(self, *args, **kwargs):
-        self.run(user_args=args, user_kwargs=kwargs)
+    def __call__(self, **kwargs):
+        self.run(**kwargs)
 
-    def run(self, user_args=None, user_kwargs=None):
+    def run(self, **user_kwargs):
         """
         Execute producer from console with specified args and kwargs.
         Also can have custom callbacks specified there.
@@ -50,15 +50,15 @@ class Producer(components.AppProducer):
         callbacks_to_run = self.default_callbacks
 
         single_transaction = self.single_transaction
-        user_args = user_args or []
         user_kwargs = user_kwargs or dict()
 
         # Running jobs from producer
         if not single_transaction:
-            for job in self.handler(*user_args, **user_kwargs):
+            print(user_kwargs)
+            for job in self.handler(**user_kwargs):
                 self.send_job(job, callbacks_to_run)
         else:
-            jobs_to_send = list(self.handler(*user_args, **user_kwargs))
+            jobs_to_send = list(self.handler(**user_kwargs))
             self.send_jobs(jobs_to_send, callbacks_to_run)
 
     def run_jobs(self, die_when_empty=False):

@@ -8,12 +8,13 @@ from stepist.flow.steps.step import Step as StepistStep
 
 from stairs.core import app as stairs_app
 from stairs.core.app import App as StairsApp
-from stairs.core.app.components import AppBaseComponent, AppPipeline
+from stairs.core.app_components import AppBaseComponent, AppPipeline
 
 from stairs.core.session import project_session
 
 from stairs.core.project import dbs, config as stairs_config
-from stairs.core.project import utils, signals
+from stairs.core.project import utils
+from stairs.core.utils import signals
 
 
 class StairsProject:
@@ -156,6 +157,8 @@ class StairsProject:
         Iterates by streaming queues and listening for a jobs related to
         defined pipelines.
 
+        Filter steps which not related to pipeline (e.g. StandAloneConsumer)
+
         :param pipelines_to_run: list of Stairs pipelines which are
         listening for a jobs from streaming services. If not defined run all
         pipelines defined in stairs project.
@@ -172,6 +175,10 @@ class StairsProject:
 
         # if custom pipelines defined, run all stairs pipelines.
         steps_to_run = steps_to_run or self.steps_to_run()
+
+        # Filter steps which should not be run simultaneously with pipeline
+        steps_to_run = [step for step in steps_to_run
+                        if utils.is_step_related_to_pipelines(step)]
 
         self.stepist_app.run(steps_to_run,
                              die_on_error=die_on_error,
@@ -254,13 +261,8 @@ class StairsProject:
         components_to_run = []
 
         for step in self.stepist_app.get_workers_steps():
-            related_to_pipeline = False
 
-            for pipeline_step in utils.PIPELINES_STEPS_TO_RUN:
-                if isinstance(step.handler, pipeline_step):
-                    related_to_pipeline = True
-
-            if related_to_pipeline:
+            if utils.is_step_related_to_pipelines(step):
                 components_to_run.append(step)
 
         return components_to_run

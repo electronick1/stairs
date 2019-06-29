@@ -1,8 +1,8 @@
-from stairs.core.app import components
+from stairs.core import app_components
 from stairs.core.producer.utils import custom_callbacks_to_dict
 
 
-class SparkProducer(components.AppProducer):
+class SparkProducer(app_components.AppProducer):
     """
 
     """
@@ -22,7 +22,7 @@ class SparkProducer(components.AppProducer):
         # Callbacks which should be run based on user console, input
         self.custom_callbacks = custom_callbacks_to_dict([])
 
-        components.AppProducer.__init__(self, app)
+        app_components.AppProducer.__init__(self, app)
 
     def __call__(self, *args, **kwargs):
         self.run(user_args=args, user_kwargs=kwargs)

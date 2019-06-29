@@ -165,12 +165,15 @@ class PipelineFlowProducer(PipelineComponent):
 
 class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
+        print("INPUT FUNCTION: ", kwargs)
         component_data = self.validate_input_data(kwargs)
 
         result = self.run_component(component_data)
 
         output_kwargs = self.validate_output_data(kwargs)
         output_result = self.validate_output_data(result)
+
+        print("OUTPUT FUNCTION: ", output_kwargs, output_result)
         return {**output_kwargs, **output_result}
 
 
@@ -195,9 +198,12 @@ class PipelineFunctionProducer(PipelineComponent):
 
 class PipelineOutput(PipelineComponent):
     def __call__(self, **kwargs):
+        print("CONSUMER INPUT: ", kwargs)
         component_data = self.validate_input_data(kwargs)
+        print("CONSUMER COMPONENT DATA: ", component_data)
 
-        call_next_step(component_data, self.component.get_stepist_step())
+        self.run_component(component_data)
+
         return self.validate_output_data(kwargs)
 
 

@@ -3,9 +3,9 @@ import importlib
 from stairs.core.utils import AttrDict
 
 from stairs.core.session import project_session
-from stairs.core.project import signals
+from stairs.core.utils import signals
 
-from stairs.core.app import components
+from stairs.core import app_components
 from stairs.core.app.components_interface import ComponentsMixin
 
 
@@ -80,7 +80,7 @@ class App(ComponentsMixin):
     """
 
     # Aggregator class with all app components
-    components_cls = components.AppComponents
+    components_cls = app_components.AppComponents
 
     def __init__(self,
                  app_name: str,
