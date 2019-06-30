@@ -25,14 +25,14 @@ class ConsumerIter(Consumer):
         result = self.handler(*args, **kwargs)
         call_next_step(result, self.step)
 
-    def iter(self):
+    def iter(self, die_when_empty=False):
         """
         User interface for jobs_iterator.
         """
-        for data in self.jobs_iterator():
+        for data in self.jobs_iterator(die_when_empty=die_when_empty):
             yield data
 
-    def jobs_iterator(self):
+    def jobs_iterator(self, die_when_empty=False):
         """
         The way how it works a bit tricky.
         We manually grab data from worker engine, but we can't just return
@@ -45,6 +45,8 @@ class ConsumerIter(Consumer):
         while True:
             job = project.stepist_app.worker_engine.receive_job(self.step)
             if job is None:
+                if die_when_empty:
+                    return
                 project.print("No jobs, waiting ... ")
                 time.sleep(3)
                 continue
