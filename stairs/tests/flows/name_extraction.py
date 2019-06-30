@@ -1,10 +1,8 @@
 import string
 import json
 
-
-from stairs.core.flow import Flow, step
-from threading import Thread
-
+from stairs.core.flow import Flow
+from stairs.core.flow.step import step
 
 class NameExtractionOneWayFlow(Flow):
 

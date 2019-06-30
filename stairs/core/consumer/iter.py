@@ -2,9 +2,9 @@ import time
 
 from stepist.flow.steps.next_step import call_next_step
 
-from stairs.core.session import project_session
+from stairs.core.session.project_session import get_project
 
-from stairs.core.consumer.consumer_model import Consumer
+from stairs.core.consumer import Consumer
 from stairs.core import app_components
 
 
@@ -40,13 +40,12 @@ class ConsumerIter(Consumer):
         For this reason we manually executing step and then just return
         result of this step (result of run_job)
         """
-        project = project_session.get_project()
+        project = get_project()
 
         while True:
             job = project.stepist_app.worker_engine.receive_job(self.step)
-            print(job)
             if job is None:
-                print("No jobs, waiting ... ")
+                project.print("No jobs, waiting ... ")
                 time.sleep(3)
                 continue
 

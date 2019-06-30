@@ -1,5 +1,5 @@
-from stairs.core.worker.pipeline_objects import PipelineComponent
-from stairs.core.worker.pipeline_model import Pipeline
+from stairs.core.pipeline.pipeline_objects import PipelineComponent
+from stairs.core.pipeline import Pipeline
 
 from stairs.core.app_components import AppBaseComponent
 from stairs.core.consumer.standalone import StandAloneConsumer

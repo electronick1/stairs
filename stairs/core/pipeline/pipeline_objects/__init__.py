@@ -1,14 +1,13 @@
 import copy
 import types
 
-from collections import Iterable
+from collections import Iterable, Mapping
 
-from stepist.flow.steps.next_step import call_next_step
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
 
 from stairs.core.utils.execeptions import StopPipelineFlag
 
-from stairs.core.worker.pipeline_objects import context as pipeline_context
+from stairs.core.pipeline.pipeline_objects import context as pipeline_context
 from stairs.core.session import unique_id_session
 
 
@@ -113,6 +112,12 @@ class PipelineComponent:
 
         return input_data
 
+    def ensure_component_result_is_valid(self, data):
+        if not isinstance(data, Mapping):
+            raise RuntimeError("Result of your function should be `Mapping`"
+                               " like object. Result of `%s` is %s type " %
+                               (self.name, type(data)))
+
 
 class PipelineFlow(PipelineComponent):
 
@@ -127,6 +132,7 @@ class PipelineFlow(PipelineComponent):
         component_data = self.validate_input_data(kwargs)
 
         result = self.run_component(component_data)
+        self.ensure_component_result_is_valid(result)
 
         # It's important to run kwargs validation and result validation
         # separately, otherwise result will be overlap by kwargs
@@ -152,6 +158,7 @@ class PipelineFlowProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
+                self.ensure_component_result_is_valid(row_data)
                 # It's important to run kwargs validation and result validation
                 # separately, otherwise result will be overlap by kwargs
                 output_kwargs = self.validate_output_data(kwargs)
@@ -165,15 +172,14 @@ class PipelineFlowProducer(PipelineComponent):
 
 class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
-        print("INPUT FUNCTION: ", kwargs)
         component_data = self.validate_input_data(kwargs)
 
         result = self.run_component(component_data)
+        self.ensure_component_result_is_valid(result)
 
         output_kwargs = self.validate_output_data(kwargs)
         output_result = self.validate_output_data(result)
 
-        print("OUTPUT FUNCTION: ", output_kwargs, output_result)
         return {**output_kwargs, **output_result}
 
 
@@ -185,6 +191,7 @@ class PipelineFunctionProducer(PipelineComponent):
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
+                self.ensure_component_result_is_valid(row_data)
                 # It's important to run kwargs validation and result validation
                 # separately, otherwise result will be overlap by kwargs
                 output_kwargs = self.validate_output_data(kwargs)
@@ -198,9 +205,7 @@ class PipelineFunctionProducer(PipelineComponent):
 
 class PipelineOutput(PipelineComponent):
     def __call__(self, **kwargs):
-        print("CONSUMER INPUT: ", kwargs)
         component_data = self.validate_input_data(kwargs)
-        print("CONSUMER COMPONENT DATA: ", component_data)
 
         self.run_component(component_data)
 

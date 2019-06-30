@@ -7,7 +7,7 @@ from stairs.core.session.project_session import get_project
 from stairs.core.utils import signals
 
 from stairs.core import app_components
-from stairs.core.worker import data_pipeline
+from stairs.core.pipeline import data_pipeline
 
 
 class PipelineInfo:
@@ -213,6 +213,21 @@ class Pipeline(app_components.AppPipeline):
                 workers_steps.append(step)
 
         return workers_steps
+
+    def is_empty(self) -> bool:
+        """
+        Check weather pipeline don't have any jobs to execute
+
+        :return: True if all components don't have anything to execute
+        """
+        all_empty = True
+
+        for step in self.get_workers_steps():
+            if not step.is_empty():
+                all_empty = False
+                break
+
+        return all_empty
 
     def add_job(self, data):
         call_next_step(data, self.step)

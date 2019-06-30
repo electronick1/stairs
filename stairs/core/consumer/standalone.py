@@ -2,7 +2,7 @@ from stepist.flow.utils import validate_handler_data
 
 from stairs.core.session import project_session
 
-from stairs.core.consumer.consumer_model import Consumer
+from stairs.core.consumer import Consumer
 
 
 class StandAloneConsumer(Consumer):

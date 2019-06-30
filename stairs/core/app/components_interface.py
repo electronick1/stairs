@@ -1,10 +1,10 @@
 from typing import Union
-from stairs.core.producer.producer import Producer
-from stairs.core.producer.batch_producer import BatchProducer
-from stairs.core.consumer.consumer_model import Consumer
+from stairs.core.producer import Producer
+from stairs.core.producer.batch import BatchProducer
+from stairs.core.consumer import Consumer
 from stairs.core.consumer.standalone import StandAloneConsumer
-from stairs.core.consumer.consumer_iter import ConsumerIter
-from stairs.core.worker.pipeline_model import Pipeline
+from stairs.core.consumer.iter import ConsumerIter
+from stairs.core.pipeline import Pipeline
 
 
 class ComponentsMixin:
@@ -194,7 +194,7 @@ class ComponentsMixin:
         """
         from stairs.core.producer.spark_producer import SparkProducer
 
-        def _spark_producer_handler_wrap(handler) -> Producer:
+        def _spark_producer_handler_wrap(handler) -> SparkProducer:
             producer = SparkProducer(app=self,
                                      handler=handler,
                                      default_callbacks=list(pipelines))

@@ -337,6 +337,10 @@ class StairsProject:
         self.verbose = verbose
         self.stepist_app.set_verbose(verbose)
 
+    def print(self, *args):
+        if self.verbose:
+            print(*args)
+
     @classmethod
     def init_from_file(cls, config_path: str, **init_kwargs):
         config = stairs_config.ProjectConfig.load_from_file(config_path)

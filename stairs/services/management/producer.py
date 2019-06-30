@@ -1,9 +1,9 @@
 import click
 
-from stairs.core.producer.producer import run_jobs_processor
-from stairs.core.producer.producer import Producer
-from stairs.core.producer.batch_producer import BatchProducer
-from stairs.core.producer.spark_producer import SparkProducer
+from stairs.core.producer import run_jobs_processor
+from stairs.core.producer import Producer
+from stairs.core.producer.batch import BatchProducer
+from stairs.core.producer.spark import SparkProducer
 from stairs import get_project
 
 
