@@ -24,7 +24,9 @@ class ComponentsMixin:
 
     def producer(self,
                  *pipelines: Pipeline,
-                 single_transaction=False):
+                 single_transaction=False,
+                 repeat_on_signal=None,
+                 repeat_times=None):
         """
         Creates Stairs producer component.
 
@@ -74,17 +76,43 @@ class ComponentsMixin:
         useful when you need to achieve high fault tolerance, but it could be a
         problem for memory and network limits.
 
+        `repeat_on_signal` allows you to repeat producer based on some circle
+        action. When producer done, stairs waiting until `repeat_on_signal`
+        function return True, and then rerun this producer.
+
+        `repeat_times` allows you to specify amount of times to repeat producer.
+        If `repeat_times` defined with signal, it will exist when producer
+        executed more then specified amount of times + 1 (!).
+
+        Example of repeat_on_signal:
+
+            from stairs import producer_signals
+            @producer(my_pipeline,
+                      repeat_on_signal=producer_signals.on_pipeline_empty,
+                      repeat_times=3)
+            def my_producer():
+                return dict()
+
+        You can define custom repeat_on_signal function as following:
+
+            def custom_producer_repeat(producer: Producer):
+                return random.randint(0, 1)
+
         :param pipelines: list of Stairs pipelines
         :param single_transaction: True - if you want to commit data which were
         yield in one transaction
-
+        :param repeat_on_signal: function which define when we need to repeat
+        producer
+        :param repeat_times: amount of times we need to repeat producer
         :return: function wrapper which returns Producer
         """
         def _producer_handler_wrap(handler) -> Producer:
             producer = Producer(app=self,
                                 handler=handler,
                                 default_callbacks=list(pipelines),
-                                single_transaction=single_transaction)
+                                single_transaction=single_transaction,
+                                repeat_on_signal=repeat_on_signal,
+                                repeat_times=repeat_times)
 
             return producer
 
@@ -161,6 +189,17 @@ class ComponentsMixin:
         It will simply run `based_on` producer, and forward result to current
         function, then you can run new custom pipelines.
 
+        Example:
+
+            @app.producer(my_pipeline)
+            def my_producer():
+                for i in range(100):
+                    yield dict(x=1)
+
+            @app.producer_redirect(my_producer, my_new_pipeline)
+            def my_producer_2(data):
+                return data
+
         :param based_on: Stairs producer Instance which will executed before
         current function
 
@@ -175,7 +214,9 @@ class ComponentsMixin:
             producer = Producer(app=self,
                                 handler=redirect_handler,
                                 default_callbacks=list(pipelines),
-                                single_transaction=based_on.single_transaction)
+                                single_transaction=based_on.single_transaction,
+                                repeat_on_signal=based_on.repeat_on_signal,
+                                repeat_times=based_on.repeat_times)
 
             return producer
 

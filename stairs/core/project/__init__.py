@@ -65,8 +65,9 @@ class StairsProject:
     """
 
     def __init__(self,
-                 stepist_app: StepistApp = None,
                  config_file: str = None,
+                 streaming_service=None,
+                 stepist_app: StepistApp = None,
                  verbose: bool = None,
                  data_pickeler=ujson,
                  use_booster: bool = False,
@@ -83,7 +84,8 @@ class StairsProject:
 
         :param data_pickeler: Class with loads/dumps methods to
         encode/decode data, used to compress/convert data during communication
-        between components.
+        between components. It's important that Stairs data pickler is the
+        same which defined in Stepist.
 
         :param use_booster: True - if you need to use Stepist booster
         communication.
@@ -109,6 +111,10 @@ class StairsProject:
 
         # Setup Stepist app and internal communication parts
         if stepist_app is None:
+
+            if streaming_service:
+                self.config['worker_engine'] = streaming_service
+
             self.stepist_app = StepistApp(data_pickeler=data_pickeler,
                                           use_booster=use_booster,
                                           **self.config)

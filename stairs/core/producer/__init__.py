@@ -20,7 +20,7 @@ class Producer(app_components.AppProducer):
 
     def __init__(self, app, handler, default_callbacks: list,
                  queue_limit=None, single_transaction=False,
-                 retry_on_signal=None):
+                 repeat_on_signal=None, repeat_times=None):
 
         self.app = app
 
@@ -34,7 +34,10 @@ class Producer(app_components.AppProducer):
         self.default_callbacks = default_callbacks or []
 
         # Restart producer by function signal
-        self.retry_on_signal = retry_on_signal
+        self.repeat_on_signal = repeat_on_signal
+        # Amount of times when we need to retry producer, also useful with
+        # signal
+        self.repeat_times = repeat_times
 
         # Stepist step basically to forward jobs to current producer
         # e.g. from Batch Producer
@@ -48,8 +51,11 @@ class Producer(app_components.AppProducer):
         app_components.AppProducer.__init__(self, app)
 
     def __call__(self, **kwargs):
-        if self.retry_on_signal:
-            self.run_retry(**kwargs)
+        if self.repeat_on_signal:
+            self.run_signal_repeat(**kwargs)
+        elif self.repeat_times:
+            for _ in range(self.repeat_times):
+                self.run(**kwargs)
         else:
             self.run(**kwargs)
 
@@ -79,15 +85,22 @@ class Producer(app_components.AppProducer):
             jobs_to_send = list(self.handler(**user_kwargs))
             self.send_jobs(jobs_to_send, callbacks_to_run)
 
-    def run_retry(self, **user_kwargs):
+    def run_signal_repeat(self, **user_kwargs):
+        repeat_count = 0
+
         while True:
             self.run(**user_kwargs)
 
-            if self.retry_on_signal is None:
+            if self.repeat_on_signal is None:
                 return
 
-            while not self.retry_on_signal(self):
+            while not self.repeat_on_signal(self):
                 time.sleep(self.retry_sleep_time)
+
+            repeat_count += 1
+            if self.repeat_times and repeat_count > self.repeat_times:
+                print("Producer successfully repeated %s times" % (repeat_count-1))
+                break
 
     def run_jobs(self, die_when_empty=False):
         run_jobs_processor(project=get_project(),

@@ -1,4 +1,3 @@
-from typing import List
 from stairs.core.utils import AttrDict
 from stepist.app_config import AppConfig as StepistConfig
 
@@ -24,5 +23,6 @@ class ProjectConfig(StepistConfig):
         else:
             d = vars(filename)
 
+        d = {key.lower(): value for key, value in d.items()}
         d = AttrDict(d)
         return d

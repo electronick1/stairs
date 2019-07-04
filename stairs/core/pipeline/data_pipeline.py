@@ -761,7 +761,7 @@ def concatenate(*data_frames: DataFrame,
                 **data_points_or_frames: Union[DataFrame, DataPoint]) \
         -> DataFrame:
     """
-    Concatenate DataFrame objects or DataPoints into one DataFrame.
+    Concatenate DataFrame's objects or DataPoint's into one DataFrame.
 
     Example:
 
