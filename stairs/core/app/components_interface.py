@@ -9,10 +9,11 @@ from stairs.core.pipeline import Pipeline
 
 class ComponentsMixin:
     """
-    User interface and initialization of all app components. Its a part of
-    stairs.App class.
+    User interface and initialization of all app components.
 
-    It's a facade which implement decorator like functions to setup and configure
+    Its a part of stairs.App class.
+
+    It's a facade which implements decorator like functions to setup and configure
     different stairs app components.
 
     Also implements some shortcuts for app.
@@ -118,7 +119,9 @@ class ComponentsMixin:
 
         return _producer_handler_wrap
 
-    def batch_producer(self, producer: Producer) -> BatchProducer:
+    def batch_producer(self, producer: Producer,
+                       repeat_on_signal=None,
+                       repeat_times=None) -> BatchProducer:
         """
         Next iteration for Producer.
         Batch producer allows you to generate jobs for regular producer. It's
@@ -167,6 +170,28 @@ class ComponentsMixin:
             # read streaming service, and stop execute which queue is empty
             simple_producer.run_jobs(die_when_empty=True)
 
+        repeat_on_signal` allows you to repeat producer based on some circle
+        action. When producer done, stairs waiting until `repeat_on_signal`
+        function return True, and then rerun this producer.
+
+        `repeat_times` allows you to specify amount of times to repeat producer.
+        If `repeat_times` defined with signal, it will exist when producer
+        executed more then specified amount of times + 1 (!).
+
+        Example of repeat_on_signal:
+
+            from stairs import producer_signals
+            @batch_producer(my_simple_producer,
+                           repeat_on_signal=producer_signals.on_pipeline_empty,
+                           repeat_times=3)
+            def my_batch_producer():
+                return dict()
+
+        You can define custom repeat_on_signal function as following:
+
+            def custom_producer_repeat(producer: Producer):
+                return random.randint(0, 1)
+
 
         :param producer: Stairs producer instance
         :return: Stairs Batch producer instance
@@ -175,7 +200,9 @@ class ComponentsMixin:
         def _batch_producer_handler_wrap(handler):
             batch_producer = BatchProducer(app=self,
                                            handler=handler,
-                                           simple_producer=producer)
+                                           simple_producer=producer,
+                                           repeat_on_signal=repeat_on_signal,
+                                           repeat_times=repeat_times)
             return batch_producer
 
         return _batch_producer_handler_wrap
@@ -233,7 +260,7 @@ class ComponentsMixin:
 
         :param pipelines: Stairs pipelines instances
         """
-        from stairs.core.producer.spark_producer import SparkProducer
+        from stairs.core.producer.spark import SparkProducer
 
         def _spark_producer_handler_wrap(handler) -> SparkProducer:
             producer = SparkProducer(app=self,

@@ -14,17 +14,14 @@ class Producer(app_components.AppProducer):
     """
 
     """
-    DEFAULT_QUEUE_LIMIT = 10 ** 6
-
     retry_sleep_time = 5
 
     def __init__(self, app, handler, default_callbacks: list,
-                 queue_limit=None, single_transaction=False,
-                 repeat_on_signal=None, repeat_times=None):
+                 single_transaction=False, repeat_on_signal=None,
+                 repeat_times=None):
 
         self.app = app
 
-        self.queue_limit = queue_limit or self.DEFAULT_QUEUE_LIMIT
         self.single_transaction = single_transaction
 
         # The main generator which yields data
@@ -99,8 +96,12 @@ class Producer(app_components.AppProducer):
 
             repeat_count += 1
             if self.repeat_times and repeat_count > self.repeat_times:
-                print("Producer successfully repeated %s times" % (repeat_count-1))
+                get_project().print("Producer successfully repeated %s times"
+                                    % (repeat_count-1))
                 break
+
+            get_project().print("Finish %s iteration. "
+                                "Repeating batch producer ..." % repeat_count)
 
     def run_jobs(self, die_when_empty=False):
         run_jobs_processor(project=get_project(),
