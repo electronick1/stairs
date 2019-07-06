@@ -1,5 +1,6 @@
 import time
 
+from stepist.flow.utils import validate_handler_data
 from stepist.flow.steps.next_step import call_next_step
 
 from stairs.core.session.project_session import get_project
@@ -21,8 +22,10 @@ class ConsumerIter(Consumer):
 
         app_components.AppConsumer.__init__(self, self.app)
 
-    def __call__(self, *args, **kwargs):
-        result = self.handler(*args, **kwargs)
+    def __call__(self, **kwargs):
+        handler_data = validate_handler_data(self.handler, kwargs)
+
+        result = self.handler(**handler_data)
         call_next_step(result, self.step)
 
     def iter(self, die_when_empty=False):

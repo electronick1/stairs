@@ -13,8 +13,8 @@ from stairs.core.session import unique_id_session
 
 class PipelineComponent:
 
-    def __init__(self, pipeline, component, name, config,
-                 as_worker=False, id=None, update_pipe_data=False):
+    def __init__(self, pipeline, component, name, config, as_worker=False,
+                 id=None, update_pipe_data=False, when_handler=None):
 
         self.component = component
         self.pipeline = pipeline
@@ -24,6 +24,8 @@ class PipelineComponent:
         self.update_pipe_data = update_pipe_data
 
         self._context_list = []
+
+        self.when_handler = when_handler
 
         self.as_worker = as_worker
 
@@ -103,6 +105,10 @@ class PipelineComponent:
 
         return output_data
 
+    def run_on_when_handler(self, data):
+        when_data = validate_handler_data(self.when_handler, data)
+        return self.when_handler(**when_data)
+
     def validate_input_data(self, data):
         input_data = dict()
         for key, value in data.items():
@@ -174,7 +180,11 @@ class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        result = self.run_component(component_data)
+        if self.when_handler and not self.run_on_when_handler(component_data):
+            result = component_data
+        else:
+            result = self.run_component(component_data)
+
         self.ensure_component_result_is_valid(result)
 
         output_kwargs = self.validate_output_data(kwargs)
@@ -187,7 +197,10 @@ class PipelineFunctionProducer(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        result = self.run_component(component_data)
+        if self.when_handler and not self.run_on_when_handler(component_data):
+            result = component_data
+        else:
+            result = self.run_component(component_data)
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
@@ -207,7 +220,8 @@ class PipelineOutput(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        self.run_component(component_data)
+        if self.when_handler and self.run_on_when_handler(component_data):
+            self.run_component(component_data)
 
         return self.validate_output_data(kwargs)
 

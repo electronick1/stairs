@@ -87,9 +87,11 @@ class Producer(app_components.AppProducer):
 
         while True:
             self.run(**user_kwargs)
-
             if self.repeat_on_signal is None:
                 return
+
+            get_project().print("Finish %s iteration, waiting signal"
+                                % (repeat_count + 1))
 
             while not self.repeat_on_signal(self):
                 time.sleep(self.retry_sleep_time)
@@ -100,8 +102,8 @@ class Producer(app_components.AppProducer):
                                     % (repeat_count-1))
                 break
 
-            get_project().print("Finish %s iteration. "
-                                "Repeating batch producer ..." % repeat_count)
+            get_project().print("Got signal `%s`, repeating .." %
+                                self.repeat_on_signal.__name__)
 
     def run_jobs(self, die_when_empty=False):
         run_jobs_processor(project=get_project(),

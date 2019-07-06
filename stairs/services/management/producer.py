@@ -38,7 +38,7 @@ def run(name, noprint, nobatch_reading):
         raise RuntimeError("Producer not found")
 
     if isinstance(producer, Producer):
-        producer.run(user_args=[], user_kwargs={})
+        producer()
         return
 
     if isinstance(producer, BatchProducer):
@@ -59,7 +59,7 @@ def run(name, noprint, nobatch_reading):
     if isinstance(producer, SparkProducer):
         import time
         t1 = time.time()
-        producer.run(user_args=[], user_kwargs={})
+        producer()
         t2 = time.time()
         print(t2 - t1)
         return

@@ -48,7 +48,7 @@ class BatchProducer(app_components.AppProducer):
 
             get_project().print("Finish %s iteration for batch generation. "
                                 "Run producer:run_jobs to execute producer"
-                                % repeat_count)
+                                % repeat_count + 1)
 
             while not self.repeat_on_signal(self.producer):
                 time.sleep(self.retry_sleep_time)

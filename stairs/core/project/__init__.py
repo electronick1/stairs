@@ -115,7 +115,7 @@ class StairsProject:
             if streaming_service:
                 self.config['worker_engine'] = streaming_service
 
-            self.stepist_app = StepistApp(data_pickeler=data_pickeler,
+            self.stepist_app = StepistApp(data_pickler=data_pickeler,
                                           use_booster=use_booster,
                                           **self.config)
         else:

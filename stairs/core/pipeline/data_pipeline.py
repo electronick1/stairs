@@ -344,7 +344,7 @@ class DataFrame:
         # Return new DataFrame built on new pipeline graph
         return DataFrame(data_pipeline)
 
-    def call_pipeline(self, pipeline) -> 'DataFrame':
+    def call_pipeline(self, pipeline, when=None) -> 'DataFrame':
         """
         Call kind of commands allows you to forward current DataFrame data
         to new pipeline and ignore any results from this pipeline.
@@ -371,6 +371,7 @@ class DataFrame:
 
         return self.subscribe_func(forward_data_to_pipeline,
                                    name='call_pipeline:%s' % str(pipeline.key()),
+                                   when=when,
                                    as_worker=False)
 
     def apply_pipeline(self, app_pipeline, config=None) -> 'DataFrame':
@@ -426,7 +427,7 @@ class DataFrame:
 
     def subscribe_consumer(self, consumer: Union[Consumer, ConsumerIter,
                                                StandAloneConsumer],
-                           name=None, as_worker=False) -> 'DataFrame':
+                           name=None, as_worker=False, when=None) -> 'DataFrame':
         """
         Subscribes consumer component.
 
@@ -458,6 +459,7 @@ class DataFrame:
             component=consumer,
             config=data_pipeline.worker_info.config,
             as_worker=as_worker,
+            when_handler=when,
             update_pipe_data=True
         )
 
@@ -468,7 +470,8 @@ class DataFrame:
 
         return DataFrame(data_pipeline)
 
-    def subscribe_func(self, func, as_worker=False, name=None) -> 'DataFrame':
+    def subscribe_func(self, func, as_worker=False, name=None,
+                       when=None) -> 'DataFrame':
         """
         Subscribes any user functions or methods.
 
@@ -508,6 +511,7 @@ class DataFrame:
                                        as_worker=as_worker,
                                        name=name,
                                        config=config,
+                                       when_handler=when,
                                        update_pipe_data=True)
 
         data_pipeline.add_pipeline_component(
@@ -518,7 +522,8 @@ class DataFrame:
         return DataFrame(data_pipeline)
 
     def subscribe_func_as_producer(self, func, as_worker=False, name=None,
-                                   _update_pipe_data=True) -> 'DataFrame':
+                                   _update_pipe_data=True,
+                                   when=None) -> 'DataFrame':
         """
         Subscribes function as a producer component. It's similar to
         DataFrame.subscribe_func but with producer behaviour.
@@ -552,6 +557,7 @@ class DataFrame:
                                                as_worker=as_worker,
                                                name=name,
                                                config=config,
+                                               when_handler=when,
                                                update_pipe_data=_update_pipe_data)
 
         data_pipeline.add_pipeline_component(
