@@ -17,7 +17,8 @@ def workers_cli():
 @click.option('--noprint', '-np', is_flag=True, help="Disable print")
 @click.option('--is_fork', '-if', is_flag=True, default=False,
               help="If false fork could be applied")
-def run(pipelines, noprint, processes, is_fork):
+@click.option('--booster', '-b', is_flag=True, default=False)
+def run(pipelines, noprint, processes, is_fork, booster):
     """
     Run all or defined pipelines. Process listening for a jobs until you
     press CTRL-C to exit.
@@ -42,9 +43,26 @@ def run(pipelines, noprint, processes, is_fork):
     else:
         pipelines_to_run = None
 
-    if processes > 1 and not is_fork:
-        spawn_context = get_context("fork")
+    spawn_context = get_context("fork")
 
+    if project.stepist_app.use_booster:
+        if not is_fork:
+            processes_objects = []
+            for i in range(processes):
+                p = spawn_context.Process(target=exec_current_one)
+                p.start()
+                processes_objects.append(p)
+                p = spawn_context.Process(target=exec_current_one,
+                                          kwargs=dict(use_booster=True))
+                p.start()
+                processes_objects.append(p)
+
+            for p in processes_objects:
+                p.join()
+        else:
+            project.run_pipelines(pipelines_to_run, use_booster=booster)
+
+    if processes > 1 and not is_fork:
         processes_objects = []
         for i in range(processes):
             p = spawn_context.Process(target=exec_current_one)
@@ -54,9 +72,12 @@ def run(pipelines, noprint, processes, is_fork):
         for p in processes_objects:
             p.join()
     else:
-        project.run_pipelines(pipelines_to_run)
+        project.run_pipelines(pipelines_to_run, use_booster=booster)
 
 
-def exec_current_one():
+def exec_current_one(use_booster=False):
     sys.argv.append("--is_fork")
+    if use_booster:
+        sys.argv.append("--booster")
+
     subprocess.call([sys.executable] + sys.argv)

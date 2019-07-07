@@ -158,7 +158,8 @@ class StairsProject:
     def run_pipelines(self,
                       pipelines_to_run: List[AppPipeline] = None,
                       die_when_empty: bool = False,
-                      die_on_error: bool = True) -> None:
+                      die_on_error: bool = True,
+                      use_booster: bool = False) -> None:
         """
         Iterates by streaming queues and listening for a jobs related to
         defined pipelines.
@@ -173,6 +174,8 @@ class StairsProject:
         streaming services.
 
         :param die_on_error: If True - function return when error happened.
+
+        :param use_booster: Run pipeline in stepist "booster" mode.
         """
 
         steps_to_run = []
@@ -186,9 +189,15 @@ class StairsProject:
         steps_to_run = [step for step in steps_to_run
                         if utils.is_step_related_to_pipelines(step)]
 
-        self.stepist_app.run(steps_to_run,
-                             die_on_error=die_on_error,
-                             die_when_empty=die_when_empty)
+        if use_booster:
+            self.print("Start Stairs booster ->")
+            self.stepist_app.run_booster(steps_to_run,
+                                         die_on_error=die_on_error,
+                                         die_when_empty=die_when_empty)
+        else:
+            self.stepist_app.run(steps_to_run,
+                                 die_on_error=die_on_error,
+                                 die_when_empty=die_when_empty)
 
     def get_app(self, name: str) -> StairsApp:
         """
