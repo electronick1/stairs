@@ -222,6 +222,8 @@ class PipelineOutput(PipelineComponent):
 
         if self.when_handler and self.run_on_when_handler(component_data):
             self.run_component(component_data)
+        elif not self.when_handler:
+            self.run_component(component_data)
 
         return self.validate_output_data(kwargs)
 

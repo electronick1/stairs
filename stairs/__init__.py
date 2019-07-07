@@ -1,6 +1,9 @@
 from stepist.flow.workers.adapters.simple_queue import SimpleQueue
-from stepist.flow.workers.adapters.rm_queue import RQAdapter
-from stepist.flow.workers.adapters.sqs_queue import SQSAdapter
+try:
+    from stepist.flow.workers.adapters.rm_queue import RQAdapter
+    from stepist.flow.workers.adapters.sqs_queue import SQSAdapter
+except ModuleNotFoundError:
+    pass
 
 from stepist.flow.workers.boost.sockets import SocketBooster
 
@@ -34,7 +37,7 @@ __url__ = "https://stairspy.com/"
 __uri__ = __url__
 __doc__ = __description__ + " <" + __uri__ + ">"
 
-__author__ = "Oleg Shydlouski"
+__author__ = "Aleh Shydlouski"
 __email__ = "oleg.ivye@gmail.com"
 
 __license__ = "Apache-2.0"

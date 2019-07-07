@@ -48,6 +48,14 @@ class Producer(app_components.AppProducer):
         app_components.AppProducer.__init__(self, app)
 
     def __call__(self, **kwargs):
+
+        if self.default_callbacks:
+            get_project().print("Generating jobs for: ")
+            for callback in self.default_callbacks:
+                get_project().print("-> %s" % callback.get_handler_name())
+        else:
+            get_project().print("No callbacks found, running empty producer ..")
+
         if self.repeat_on_signal:
             self.run_signal_repeat(**kwargs)
         elif self.repeat_times:
@@ -63,13 +71,6 @@ class Producer(app_components.AppProducer):
         """
 
         callbacks_to_run = self.default_callbacks
-
-        if callbacks_to_run:
-            get_project().print("Generating jobs for: ")
-            for callback in callbacks_to_run:
-                get_project().print("-> %s" % callback.get_handler_name())
-        else:
-            get_project().print("No callbacks found, running empty producer ..")
 
         single_transaction = self.single_transaction
         user_kwargs = user_kwargs or dict()
@@ -159,6 +160,7 @@ def run_jobs_processor(project, producers_to_run, die_when_empty=False):
     """
     Executing forwarded jobs (from batch producer)
     """
+
     steps_to_run = [p.stepist_step for p in producers_to_run]
 
     project \

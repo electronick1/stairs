@@ -53,7 +53,7 @@ class ComponentsMixin:
 
         You can run producer from stairs cli:
 
-            python manage.py producer:run
+            python manage.py producer:run producer_name
 
         Or just by calling Producer instance:
 
@@ -385,7 +385,7 @@ class ComponentsMixin:
     def consumer_iter(self):
         """
         It's a standalone consumer (similar to `app.standalone_consumer`) but,
-        it will yield all data back to the process which executed this cosumer.
+        it will yield all data back to the process which executed this consumer.
 
         (one process)
         pipeline -> Streaming service ->

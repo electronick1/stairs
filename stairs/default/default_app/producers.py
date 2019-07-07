@@ -9,4 +9,4 @@ def generate_data():
     More information here: http://stairspy.com/#producer
     """
     for i in range(20):
-        yield dict(data_frame=i)
+        yield dict(data_point=i)
