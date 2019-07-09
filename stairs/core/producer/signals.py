@@ -6,7 +6,7 @@ from stairs.core.session.project_session import get_project
 
 
 def on_pipeline_empty(producer: Producer):
-    pipelines: List[Pipeline] = producer.default_callbacks
+    pipelines = producer.default_callbacks
 
     empty_pipelines = 0
 
