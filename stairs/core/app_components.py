@@ -1,39 +1,35 @@
-import importlib
+from stepist import Step
 
 from stairs.core.utils import AttrDict
 from stairs.core.session import step_session
 
-MODULES_FOR_IMPORT = [
-    'app_config',
-    'pipelines',
-    'producers',
-    'consumers',
-]
-
 
 class AppBaseComponent(object):
     """
-    Base app component - class for specifying basic components methods.
-
-    Each app component, should have stepist initialization, and object ref to
-    stepist.step
+    Base class for all app components. It has specification of all default
+    methods which surely used in app components.
     """
-    app = None
-    component_type = None
 
-    def get_stepist_step(self):
+    # Stairs app
+    app = None
+
+    def get_stepist_step(self) -> Step:
+        """
+        Each app component, should have stepist initialization, and object ref to
+        stepist.step
+        """
         raise NotImplementedError()
 
-    def key(self):
+    def key(self) -> str:
+        """
+        Unique id for stairs component.
+        """
         raise NotImplementedError()
 
 
 class AppComponents:
     """
     Aggregator of all app components.
-
-    Also playing a role of components auto initialization (by importing modules
-    inside the app)
     """
 
     class Components(AttrDict):
@@ -47,13 +43,6 @@ class AppComponents:
         self.consumers = self.Components()
         self.flows = self.Components()
         self.steps = self.Components()
-
-    def try_import(self, base_path):
-        for module in MODULES_FOR_IMPORT:
-            try:
-                importlib.import_module("%s.%s" % (base_path, module))
-            except ImportError as e:
-                print(e)
 
 
 class AppPipeline(AppBaseComponent):
@@ -75,7 +64,7 @@ class AppStep(AppBaseComponent):
         step_session.set_last_registered_step(self)
 
 
-class AppOutput(AppBaseComponent):
+class AppConsumer(AppBaseComponent):
     def __init__(self, app):
         self.app = app
         app.components.consumers.add_component(self)

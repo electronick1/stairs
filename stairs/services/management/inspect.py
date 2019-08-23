@@ -9,9 +9,28 @@ def inspect_cli():
     pass
 
 
+@inspect_cli.command("inspect:jobs_count")
+def inspect_jobs_count():
+    steps = get_project().stepist_app.get_workers_steps()
+
+    result = dict()
+
+    for step in steps:
+        step_name = step.step_key()\
+            .replace("stepist::", "", 1)\
+            .replace("stairs::", "", 1)
+
+        result[step_name] = step.jobs_count()
+
+    result = sorted(result.items(), key=lambda x: x[1], reverse=True)
+
+    for row in result:
+        print("->%s: %s" % row)
+
+
 @inspect_cli.command("inspect:status")
 @click.argument("app_name", default=None)
-def init_session(app_name):
+def inspect_status(app_name):
     project = get_project()
 
     if app_name:
@@ -29,7 +48,7 @@ def init_session(app_name):
 
 @inspect_cli.command("inspect:monitor")
 @click.argument("app_name", default=None)
-def init_session(app_name):
+def inspect_monitor(app_name):
     project = get_project()
 
     if app_name:

@@ -1,11 +1,11 @@
-import ujson
-
 from stairs import get_project
 
 
 def handle_sqs_event(pipeline, event):
+    pickler = get_project().data_pickler
+
     for record in event:
-        handle_job(pipeline, **ujson.loads(record.body))
+        handle_job(pipeline, **pickler.loads(record.body))
 
 
 def handle_job(pipeline, **data):

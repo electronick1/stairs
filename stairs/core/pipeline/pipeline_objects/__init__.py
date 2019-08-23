@@ -1,20 +1,20 @@
+import copy
 import types
 
-from collections import Iterable
+from collections import Iterable, Mapping
 
-from stepist.flow.steps.next_step import call_next_step
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
 
 from stairs.core.utils.execeptions import StopPipelineFlag
 
-from stairs.core.worker.pipeline_objects import context as pipeline_context
+from stairs.core.pipeline.pipeline_objects import context as pipeline_context
 from stairs.core.session import unique_id_session
 
 
 class PipelineComponent:
 
-    def __init__(self, pipeline, component, name, config,
-                 as_worker=False, id=None, update_pipe_data=False):
+    def __init__(self, pipeline, component, name, config, as_worker=False,
+                 id=None, update_pipe_data=False, when_handler=None):
 
         self.component = component
         self.pipeline = pipeline
@@ -25,18 +25,39 @@ class PipelineComponent:
 
         self._context_list = []
 
+        self.when_handler = when_handler
+
         self.as_worker = as_worker
 
-        pre_id = id or name
-        self.id = "%s:%s" % (str(pre_id),
-                             unique_id_session.reserve_id_by_name(pre_id))
+        self.pre_id = id or name
+        self.id = self.gen_unique_id()
         self.name = name
         self.stepist_id = None
+
+    def run_component(self, data):
+        data = validate_handler_data(self.component, data)
+        try:
+            return self.component(**data)
+        except StopPipelineFlag as e:
+            raise StopFlowFlag(e)
 
     def add_context(self, p_component, transformation):
         self._context_list.append(
             pipeline_context.ComponentContext(p_component, transformation)
         )
+
+    def gen_unique_id(self):
+        return "%s:%s" % (
+            str(self.pre_id),
+            unique_id_session.reserve_id_by_name(self.pre_id)
+        )
+
+    def copy_component(self):
+        new_component = copy.copy(self)
+        # regenerate unique id
+        new_component.id = new_component.gen_unique_id()
+
+        return new_component
 
     def validate_output_data(self, data):
         output_data = dict()
@@ -84,6 +105,10 @@ class PipelineComponent:
 
         return output_data
 
+    def run_on_when_handler(self, data):
+        when_data = validate_handler_data(self.when_handler, data)
+        return self.when_handler(**when_data)
+
     def validate_input_data(self, data):
         input_data = dict()
         for key, value in data.items():
@@ -92,6 +117,12 @@ class PipelineComponent:
                 input_data[new_key] = value
 
         return input_data
+
+    def ensure_component_result_is_valid(self, data):
+        if not isinstance(data, Mapping):
+            raise RuntimeError("Result of your function should be `Mapping`"
+                               " like object. Result of `%s` is %s type " %
+                               (self.name, type(data)))
 
 
 class PipelineFlow(PipelineComponent):
@@ -105,11 +136,9 @@ class PipelineFlow(PipelineComponent):
 
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
-        flow_data = validate_handler_data(self.component, component_data)
-        try:
-            result = self.component(**flow_data)
-        except StopPipelineFlag:
-            raise StopFlowFlag()
+
+        result = self.run_component(component_data)
+        self.ensure_component_result_is_valid(result)
 
         # It's important to run kwargs validation and result validation
         # separately, otherwise result will be overlap by kwargs
@@ -131,14 +160,11 @@ class PipelineFlowProducer(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        flow_kwargs = validate_handler_data(self.component, component_data)
-        try:
-            result = self.component(**flow_kwargs)
-        except StopPipelineFlag:
-            raise StopFlowFlag()
+        result = self.run_component(component_data)
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
+                self.ensure_component_result_is_valid(row_data)
                 # It's important to run kwargs validation and result validation
                 # separately, otherwise result will be overlap by kwargs
                 output_kwargs = self.validate_output_data(kwargs)
@@ -153,22 +179,32 @@ class PipelineFlowProducer(PipelineComponent):
 class PipelineFunction(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
-        flow_data = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_data)
+
+        if self.when_handler and not self.run_on_when_handler(component_data):
+            result = component_data
+        else:
+            result = self.run_component(component_data)
+
+        self.ensure_component_result_is_valid(result)
 
         output_kwargs = self.validate_output_data(kwargs)
         output_result = self.validate_output_data(result)
+
         return {**output_kwargs, **output_result}
 
 
 class PipelineFunctionProducer(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
-        flow_data = validate_handler_data(self.component, component_data)
-        result = self.component(**flow_data)
+
+        if self.when_handler and not self.run_on_when_handler(component_data):
+            result = component_data
+        else:
+            result = self.run_component(component_data)
 
         if isinstance(result, types.GeneratorType) or isinstance(result, Iterable):
             for row_data in result:
+                self.ensure_component_result_is_valid(row_data)
                 # It's important to run kwargs validation and result validation
                 # separately, otherwise result will be overlap by kwargs
                 output_kwargs = self.validate_output_data(kwargs)
@@ -184,12 +220,16 @@ class PipelineOutput(PipelineComponent):
     def __call__(self, **kwargs):
         component_data = self.validate_input_data(kwargs)
 
-        call_next_step(component_data, self.component.get_stepist_step())
+        if self.when_handler and self.run_on_when_handler(component_data):
+            self.run_component(component_data)
+        elif not self.when_handler:
+            self.run_component(component_data)
+
         return self.validate_output_data(kwargs)
 
 
-class PipelineInVainComponent(PipelineComponent):
-    def __init__(self, pipeline, name="InVain"):
+class PipelineConnectorComponent(PipelineComponent):
+    def __init__(self, pipeline, name="Connector"):
         PipelineComponent.__init__(self,
                                    pipeline=pipeline,
                                    component=None,
@@ -200,4 +240,5 @@ class PipelineInVainComponent(PipelineComponent):
     def __call__(self, **data):
         data.update(self.validate_input_data(data))
         data = self.validate_output_data(data)
+
         return data

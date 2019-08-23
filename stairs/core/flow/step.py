@@ -1,12 +1,10 @@
 import uuid
 
-from stairs.core.utils import AttrDict
-
 from stepist.flow.utils import validate_handler_data
 from stepist.flow.steps.hub import Hub
 from stepist.flow.steps.next_step import call_next_step
 
-from stairs.core.app.components import AppStep
+from stairs.core.app_components import AppStep
 
 
 def step(*next_steps, save_result=False, name=None):

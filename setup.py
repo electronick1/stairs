@@ -20,7 +20,7 @@ setup(
         'click',
         'ujson >= 1.0',
         'ipython >= 6.0.0',
-        'stepist == 0.1.5.2'
+        'stepist >= 0.1.6'
     ],
     url='https://github.com/electronick1/stairs',
     download_url='https://github.com/electronick1/stairs/archive/0.1.5.3.tar.gz',

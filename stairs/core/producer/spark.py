@@ -1,15 +1,14 @@
-from stairs.core.app import components
+from stairs.core import app_components
 from stairs.core.producer.utils import custom_callbacks_to_dict
 
 
-class SparkProducer(components.AppProducer):
+class SparkProducer(app_components.AppProducer):
     """
 
     """
     DEFAULT_QUEUE_LIMIT = 10 ** 6
 
-    def __init__(self, app, handler, default_callbacks: list,
-                 custom_callbacks: list, queue_limit=None):
+    def __init__(self, app, handler, default_callbacks: list, queue_limit=None):
 
         self.app = app
 
@@ -21,9 +20,9 @@ class SparkProducer(components.AppProducer):
         # Callbacks which should be run always
         self.default_callbacks = default_callbacks or []
         # Callbacks which should be run based on user console, input
-        self.custom_callbacks = custom_callbacks_to_dict(custom_callbacks or [])
+        self.custom_callbacks = custom_callbacks_to_dict([])
 
-        components.AppProducer.__init__(self, app)
+        app_components.AppProducer.__init__(self, app)
 
     def __call__(self, *args, **kwargs):
         self.run(user_args=args, user_kwargs=kwargs)
