@@ -783,7 +783,7 @@ def compile_pipeline(pipeline):
 
 
 def condition_pipeline(statement, do_pipeline, otherwise_pipeline=None):
-    return StatementPipeline(statement, do_pipeline, otherwise_pipeline)
+    return ConditionPipeline(statement, do_pipeline, otherwise_pipeline)
 
 
 def concatenate(*data_frames: DataFrame,
