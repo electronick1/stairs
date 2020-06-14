@@ -54,7 +54,7 @@ class Producer(app_components.AppProducer):
             for callback in self.default_callbacks:
                 get_project().print("-> %s" % callback.get_handler_name())
         else:
-            get_project().print("No callbacks found, running empty producer ..")
+            get_project().print("No callbacks found, running producer ..")
 
         if self.repeat_on_signal:
             self.run_signal_repeat(**kwargs)

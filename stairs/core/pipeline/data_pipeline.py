@@ -2,6 +2,7 @@ import copy
 import uuid
 from typing import Union
 from stepist.flow.steps.next_step import call_next_step as stepist_next_step
+from stepist.flow.utils import validate_handler_data
 
 from stairs.core.pipeline.pipeline_objects import (PipelineFlow,
                                                    PipelineFlowProducer,
@@ -126,6 +127,20 @@ class DataPipeline:
             pipeline=None,
             name="%s:root" % worker_info.key()
         )
+
+
+class ConditionPipeline:
+    def __init__(self, statement, do_pipeline, otherwise_pipeline=None):
+        self.statement = statement
+        self.do_pipeline = do_pipeline
+        self.otherwise_pipeline = otherwise_pipeline
+
+    def call_by_condition(self, data):
+        statement_data = validate_handler_data(self.statement, data)
+        if self.statement(**statement_data):
+            self.do_pipeline.add_job(data)
+        else:
+            self.otherwise_pipeline.add_job(data)
 
 
 class DataFrame:
@@ -366,7 +381,10 @@ class DataFrame:
         """
 
         def forward_data_to_pipeline(**kwargs):
-            pipeline.add_job(kwargs)
+            if isinstance(pipeline, ConditionPipeline):
+                pipeline.call_by_condition(kwargs)
+            else:
+                pipeline.add_job(kwargs)
             return dict()
 
         return self.subscribe_func(forward_data_to_pipeline,
@@ -471,7 +489,7 @@ class DataFrame:
         return DataFrame(data_pipeline)
 
     def subscribe_func(self, func, as_worker=False, name=None,
-                       when=None) -> 'DataFrame':
+                       when=None, key_wrapper=None) -> 'DataFrame':
         """
         Subscribes any user functions or methods.
 
@@ -512,6 +530,7 @@ class DataFrame:
                                        name=name,
                                        config=config,
                                        when_handler=when,
+                                       key_wrapper=key_wrapper,
                                        update_pipe_data=True)
 
         data_pipeline.add_pipeline_component(
@@ -761,6 +780,10 @@ def compile_pipeline(pipeline):
         stepist_steps[unique_id] = step
 
     return stepist_steps
+
+
+def condition_pipeline(statement, do_pipeline, otherwise_pipeline=None):
+    return StatementPipeline(statement, do_pipeline, otherwise_pipeline)
 
 
 def concatenate(*data_frames: DataFrame,

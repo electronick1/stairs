@@ -14,7 +14,7 @@ from stairs.core.session import unique_id_session
 class PipelineComponent:
 
     def __init__(self, pipeline, component, name, config, as_worker=False,
-                 id=None, update_pipe_data=False, when_handler=None):
+                 id=None, update_pipe_data=False, when_handler=None, key_wrapper=None):
 
         self.component = component
         self.pipeline = pipeline
@@ -32,14 +32,20 @@ class PipelineComponent:
         self.pre_id = id or name
         self.id = self.gen_unique_id()
         self.name = name
+        self.key_wrapper = key_wrapper
         self.stepist_id = None
 
     def run_component(self, data):
         data = validate_handler_data(self.component, data)
         try:
-            return self.component(**data)
+            component_result = self.component(**data)
         except StopPipelineFlag as e:
             raise StopFlowFlag(e)
+
+        if self.key_wrapper is not None:
+            component_result = {self.key_wrapper: component_result}
+
+        return component_result
 
     def add_context(self, p_component, transformation):
         self._context_list.append(
