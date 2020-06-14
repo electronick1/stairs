@@ -14,7 +14,12 @@ from .core.app import App
 
 from .core.utils.execeptions import StopPipelineFlag
 
-from .core.pipeline.data_pipeline import concatenate, DataPoint, DataFrame
+from .core.pipeline.data_pipeline import (
+    concatenate, 
+    DataPoint, 
+    DataFrame, 
+    condition_pipeline
+)
 from .core.pipeline import PipelineInfo, Pipeline
 from .core.flow import Flow
 from .core.flow.step import step
