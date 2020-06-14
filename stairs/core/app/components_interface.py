@@ -110,7 +110,7 @@ class ComponentsMixin:
         def _producer_handler_wrap(handler) -> Producer:
             producer = Producer(app=self,
                                 handler=handler,
-                                default_callbacks=list(pipelines),
+                                default_callbacks=list(pipelines or []),
                                 single_transaction=single_transaction,
                                 repeat_on_signal=repeat_on_signal,
                                 repeat_times=repeat_times)
