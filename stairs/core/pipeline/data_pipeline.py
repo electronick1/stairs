@@ -142,6 +142,9 @@ class ConditionPipeline:
         else:
             self.otherwise_pipeline.add_job(data)
 
+    def key(self):
+        return "condition_pipeline:%s:%s" % (do_pipeline.key(), otherwise_pipeline.key())
+
 
 class DataFrame:
     """
