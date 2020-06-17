@@ -1,5 +1,6 @@
 import copy
 import types
+import logging
 
 from collections import Iterable, Mapping
 
@@ -9,6 +10,9 @@ from stairs.core.utils.execeptions import StopPipelineFlag
 
 from stairs.core.pipeline.pipeline_objects import context as pipeline_context
 from stairs.core.session import unique_id_session
+
+
+logger = logging.getLogger(__name__)
 
 
 class PipelineComponent:
@@ -41,6 +45,10 @@ class PipelineComponent:
             component_result = self.component(**data)
         except StopPipelineFlag as e:
             raise StopFlowFlag(e)
+        except TypeError as e:
+            msg = "%s on component: %s on method/class: %s"
+            logger.error(msg % (str(e), self.name, str(self.component)))
+            raise
 
         if self.key_wrapper is not None:
             component_result = {self.key_wrapper: component_result}
