@@ -271,7 +271,7 @@ class ComponentsMixin:
 
         return _spark_producer_handler_wrap
 
-    def pipeline(self, config=None):
+    def pipeline(self, config=None, before=None, after=None):
         """
         Pipeline is a way to connect all functions and data handler into one
         execution flow.
@@ -326,7 +326,7 @@ class ComponentsMixin:
         """
 
         def _pipeline_handler_wrap(func) -> Pipeline:
-            return Pipeline(self, func, config)
+            return Pipeline(self, func, config, before_callbacks=before, after_callbacks=after)
 
         return _pipeline_handler_wrap
 

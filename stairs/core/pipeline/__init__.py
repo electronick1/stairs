@@ -51,7 +51,9 @@ class Pipeline(app_components.AppPipeline):
     def __init__(self,
                  app,
                  pipeline_builder,
-                 worker_config):
+                 worker_config,
+                 before_callbacks=None,
+                 after_callbacks=None):
         """
         :param app: Stairs app
 
@@ -64,6 +66,9 @@ class Pipeline(app_components.AppPipeline):
         self.pipeline_builder = pipeline_builder
 
         self.config = worker_config
+
+        self.before_callbacks = before_callbacks or []
+        self.after_callbacks = after_callbacks or []
 
         # None means - not compiled yet.
         # call self.compile to build pipeline and generate stepist graph
@@ -99,7 +104,13 @@ class Pipeline(app_components.AppPipeline):
             raise RuntimeError("Worker pipeline no compiled, "
                                "run worker.compile()")
 
+        for callback in self.before_callbacks:
+            callback(**kwargs)
+
         result = call_next_step(kwargs, self.pipeline.get_stepist_root())
+
+        for callback in self.after_callbacks:
+            callback(**kwargs)
 
         if result:
             # only for testing. Not supported for production, yet.
