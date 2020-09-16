@@ -7,6 +7,7 @@ from collections import Iterable, Mapping
 from stepist.flow.utils import validate_handler_data, StopFlowFlag
 
 from stairs.core.utils.execeptions import StopPipelineFlag
+from stairs.core.utils.signals import on_component_called, on_component_finished
 
 from stairs.core.pipeline.pipeline_objects import context as pipeline_context
 from stairs.core.session import unique_id_session
@@ -39,10 +40,15 @@ class PipelineComponent:
         self.key_wrapper = key_wrapper
         self.stepist_id = None
 
+        self.on_component_called_signal = on_component_called()
+        self.on_component_finished_signal = on_component_finished()
+
     def run_component(self, data):
         data = validate_handler_data(self.component, data)
         try:
+            self.on_component_called_signal.send_signal(name=self.name)
             component_result = self.component(**data)
+            self.on_component_finished_signal.send_signal(name=self.name)
         except StopPipelineFlag as e:
             raise StopFlowFlag(e)
         except TypeError as e:

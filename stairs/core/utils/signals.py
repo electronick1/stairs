@@ -20,6 +20,14 @@ def on_pipeline_ready(pipeline):
     return Signal("on_pipeline_compiled:%s" % pipeline.__name__())
 
 
+def on_component_called():
+    return Signal("on_component_called")
+
+
+def on_component_finished():
+    return Signal("on_component_finished")
+
+
 class Signal:
 
     def __init__(self, key):
