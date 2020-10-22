@@ -365,7 +365,7 @@ class DataFrame:
         # Return new DataFrame built on new pipeline graph
         return DataFrame(data_pipeline)
 
-    def call_pipeline(self, pipeline, when=None) -> 'DataFrame':
+    def call_pipeline(self, pipeline, when=None, as_worker=True) -> 'DataFrame':
         """
         Call kind of commands allows you to forward current DataFrame data
         to new pipeline and ignore any results from this pipeline.
@@ -390,7 +390,11 @@ class DataFrame:
             if isinstance(pipeline, ConditionPipeline):
                 pipeline.call_by_condition(kwargs)
             else:
-                pipeline.add_job(kwargs)
+                if as_worker:
+                    pipeline.add_job(kwargs)
+                else:
+                    pipeline(**kwargs)
+                    
             return dict()
 
         return self.subscribe_func(forward_data_to_pipeline,
